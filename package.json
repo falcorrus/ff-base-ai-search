@@ -1,0 +1,28 @@
+{
+  "name": "ff-base-ai-search",
+  "version": "1.0.0",
+  "description": "Интеллектуальная система поиска по базе знаний пользователя, хранящейся в виде Markdown-файлов в репозитории GitHub.",
+  "main": "test-request.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/falcorrus/ff-base-ai-search.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "bugs": {
+    "url": "https://github.com/falcorrus/ff-base-ai-search/issues"
+  },
+  "homepage": "https://github.com/falcorrus/ff-base-ai-search#readme",
+  "dependencies": {
+    "jsdom": "^26.1.0"
+  }
+}
