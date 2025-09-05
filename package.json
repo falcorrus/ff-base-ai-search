@@ -4,6 +4,7 @@
   "description": "Интеллектуальная система поиска по базе знаний пользователя, хранящейся в виде Markdown-файлов в репозитории GitHub.",
   "main": "test-request.js",
   "scripts": {
+    "dev": "npm run dev --workspace=frontend & npm run dev --workspace=backend",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
