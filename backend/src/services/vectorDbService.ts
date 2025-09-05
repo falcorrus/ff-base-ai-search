@@ -1,16 +1,22 @@
 // src/services/vectorDbService.ts
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { Document } from '../models/Document';
-import { config } from '../config';
 
 export class VectorDbService {
   private supabase: SupabaseClient;
 
   constructor() {
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceRoleKey) {
+      throw new Error('Missing Supabase URL or Service Role Key in environment variables.');
+    }
+
     this.supabase = createClient(
-      config.SUPABASE.URL,
-      config.SUPABASE.SERVICE_ROLE_KEY,
-      { auth: { persistSession: false } } // Use service role key, do not persist session
+      supabaseUrl,
+      supabaseServiceRoleKey,
+      { auth: { persistSession: false } }
     );
   }
 
@@ -67,5 +73,3 @@ export class VectorDbService {
   }
 }
 
-// Экспортируем экземпляр сервиса
-export const vectorDbService = new VectorDbService();

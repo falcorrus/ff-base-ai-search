@@ -1,30 +1,37 @@
 // src/controllers/searchController.ts
 import { Request, Response } from 'express';
-import { vectorDbService } from '../services/vectorDbService';
+import { VectorDbService } from '../services/vectorDbService';
 import { llmService } from '../services/llmService';
-
-// Function to convert 768-dimensional embedding to 1536-dimensional embedding
-function convertEmbedding(embedding: number[]): number[] {
-  // If already 1536-dimensional, return as is
-  if (embedding.length === 1536) {
-    return embedding;
-  }
-  
-  // If 768-dimensional, pad with zeros to make it 1536-dimensional
-  if (embedding.length === 768) {
-    return [...embedding, ...Array(768).fill(0)];
-  }
-  
-  // For any other size, pad or truncate to 1536
-  const result = new Array(1536).fill(0);
-  const copyLength = Math.min(embedding.length, 1536);
-  for (let i = 0; i < copyLength; i++) {
-    result[i] = embedding[i];
-  }
-  return result;
-}
+import { Document } from '../models/Document';
 
 export class SearchController {
+  private vectorDbService: VectorDbService;
+
+  constructor(vectorDbService: VectorDbService) {
+    this.vectorDbService = vectorDbService;
+  }
+
+  // Function to convert 768-dimensional embedding to 1536-dimensional embedding
+  private convertEmbedding(embedding: number[]): number[] {
+    // If already 1536-dimensional, return as is
+    if (embedding.length === 1536) {
+      return embedding;
+    }
+    
+    // If 768-dimensional, pad with zeros to make it 1536-dimensional
+    if (embedding.length === 768) {
+      return [...embedding, ...Array(768).fill(0)];
+    }
+    
+    // For any other size, pad or truncate to 1536
+    const result = new Array(1536).fill(0);
+    const copyLength = Math.min(embedding.length, 1536);
+    for (let i = 0; i < copyLength; i++) {
+      result[i] = embedding[i];
+    }
+    return result;
+  }
+
   // Обработчик поискового запроса
   async search(req: Request, res: Response) {
     try {
@@ -45,11 +52,11 @@ export class SearchController {
       console.log('Generated query embedding with length:', queryEmbedding.length);
       
       // Convert embedding to 1536-dimensional if needed
-      const convertedEmbedding = convertEmbedding(queryEmbedding);
+      const convertedEmbedding = this.convertEmbedding(queryEmbedding);
       console.log('Converted query embedding to length:', convertedEmbedding.length);
       
       // Ищем похожие документы
-      const similarDocuments = await vectorDbService.findSimilarDocuments(convertedEmbedding, 5);
+      const similarDocuments = await this.vectorDbService.findSimilarDocuments(convertedEmbedding, 5);
       console.log('Found similar documents:', similarDocuments.length);
       console.log('Similar documents:', similarDocuments);
       
@@ -60,7 +67,7 @@ export class SearchController {
       // Возвращаем результат
       return res.json({
         answer,
-        results: similarDocuments.map(doc => ({
+        results: similarDocuments.map((doc: Document) => ({
           id: doc.id,
           title: doc.id.toString(), // Using ID as title for now
           path: doc.origin || '',
@@ -83,7 +90,7 @@ export class SearchController {
         return res.status(400).json({ error: 'Document ID is required' });
       }
       
-      const document = await vectorDbService.getDocumentById(id);
+      const document = await this.vectorDbService.getDocumentById(id);
       
       if (!document) {
         return res.status(404).json({ error: 'Document not found' });
@@ -100,7 +107,32 @@ export class SearchController {
       return res.status(500).json({ error: 'Internal server error' });
     }
   }
-}
 
-// Экспортируем экземпляр контроллера
-export const searchController = new SearchController();
+  // Обработчик семантического поиска
+  async semanticSearch(req: Request, res: Response) {
+    try {
+      const { query } = req.query;
+      
+      if (!query || typeof query !== 'string') {
+        return res.status(400).json({ error: 'Query parameter is required' });
+      }
+      
+      // Import the LLM service dynamically to avoid circular dependencies
+      const { llmService } = await import('../services/llmService');
+      
+      // Create embedding for the query
+      const queryEmbedding = await llmService.createEmbedding(query);
+      
+      // Convert embedding to 1536-dimensional if needed
+      const convertedEmbedding = this.convertEmbedding(queryEmbedding);
+      
+      // Find similar documents
+      const similarDocuments = await this.vectorDbService.findSimilarDocuments(convertedEmbedding, 10);
+      
+      return res.json(similarDocuments);
+    } catch (err) {
+      console.error('Unexpected error in semantic search:', err);
+      return res.status(500).json({ error: 'Internal server error' });
+    }
+  }
+}
