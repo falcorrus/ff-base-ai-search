@@ -27,3 +27,4 @@ __pycache__/
 
 # Project specific logs
 knowledge_base/search_log.json
+knowledge_base/embeddings_copy.json

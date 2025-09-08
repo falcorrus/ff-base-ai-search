@@ -5,6 +5,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 import google.generativeai as genai
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+import time
 
 # Загрузка переменных окружения из .env файла
 load_dotenv()
@@ -159,6 +162,12 @@ def log_request(query, timestamp):
 async def read_root():
     return {"message": "Backend is running!"}
 
+@app.get("/notes-count")
+async def get_notes_count():
+    """Возвращает количество загруженных заметок в базе знаний"""
+    embeddings_data = load_embeddings()
+    return {"count": len(embeddings_data)}
+
 @app.get("/update-knowledge-base")
 async def update_knowledge_base():
     """Обновление базы знаний из GitHub репозитория"""
@@ -201,7 +210,6 @@ async def update_knowledge_base():
 @app.get("/search")
 async def search_notes(query: str):
     """Поиск релевантных заметок на основе запроса пользователя"""
-    import time
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
     
     # Логирование запроса
@@ -210,57 +218,74 @@ async def search_notes(query: str):
     try:
         # Загрузка эмбеддингов
         embeddings_data = load_embeddings()
+        print(f"DEBUG: Loaded embeddings_data length: {len(embeddings_data)}")
         if not embeddings_data:
-            return {"query": query, "result": "Knowledge base is empty. Please update it first."}
+            return {"query": query, "results": [], "message": "Knowledge base is empty. Please update it first."}
         
+        # Check if embeddings_data contains actual embeddings
+        # This handles cases where embeddings_data might be loaded but empty of actual embeddings
+        if not any("embedding" in item and item["embedding"] is not None for item in embeddings_data):
+            print("DEBUG: No valid embeddings found in embeddings_data.")
+            return {"query": query, "results": [], "message": "No valid embeddings found in the knowledge base. Please update it first."}
+
         # Генерация эмбеддинга для запроса
         query_embedding = generate_embedding(query)
+        print(f"DEBUG: query_embedding is None: {query_embedding is None}")
         if not query_embedding:
-            return {"query": query, "result": "Failed to generate embedding for the query."}
+            return {"query": query, "results": [], "message": "Failed to generate embedding for the query."}
         
         # Поиск наиболее релевантных документов
-        # Простая реализация поиска по косинусному сходству
-        from sklearn.metrics.pairwise import cosine_similarity
-        import numpy as np
+        doc_embeddings = np.array([item["embedding"] for item in embeddings_data if "embedding" in item and item["embedding"] is not None])
+        print(f"DEBUG: doc_embeddings shape: {doc_embeddings.shape}")
         
-        # Преобразование эмбеддингов в массивы numpy
-        doc_embeddings = np.array([item["embedding"] for item in embeddings_data])
+        # Ensure doc_embeddings is not empty after filtering
+        if doc_embeddings.size == 0:
+            print("DEBUG: doc_embeddings is empty after filtering.")
+            return {"query": query, "results": [], "message": "No valid document embeddings to compare with. Please update the knowledge base."}
+
         query_emb = np.array(query_embedding).reshape(1, -1)
+        print(f"DEBUG: query_emb shape: {query_emb.shape}")
         
-        # Вычисление косинусного сходства
         similarities = cosine_similarity(query_emb, doc_embeddings)[0]
+        print(f"DEBUG: similarities shape: {similarities.shape}")
         
-        # Получение индекса наиболее релевантного документа
-        best_match_idx = np.argmax(similarities)
-        best_similarity = similarities[best_match_idx]
+        # Получение индексов N наиболее релевантных документов
+        top_n = 5
+        # Ensure top_n does not exceed the number of available documents
+        num_available_docs = len(embeddings_data)
+        actual_top_n = min(top_n, num_available_docs)
+
+        if actual_top_n == 0: # No documents to search
+            print("DEBUG: actual_top_n is 0.")
+            return {"query": query, "results": [], "message": "No documents available for search."} # This line is redundant due to the previous check, but harmless
+
+        top_indices = similarities.argsort()[-actual_top_n:][::-1]
+        print(f"DEBUG: top_indices: {top_indices}")
         
-        # Формирование контекста из наиболее релевантного документа
-        context = embeddings_data[best_match_idx]["content"]
-        file_path = embeddings_data[best_match_idx]["file_path"]
-        
-        # Генерация ответа с помощью LLM
-        prompt = f"""
-        Контекст:
-        {context}
-        
-        Вопрос пользователя: {query}
-        
-        Пожалуйста, дайте подробный ответ на вопрос пользователя, используя информацию из контекста выше.
-        Если информация в контексте не относится к вопросу, ответьте "Информация не найдена в базе знаний".
-        """
-        
-        if not GEMINI_API_KEY:
-            return {"query": query, "result": "Gemini API key not configured. Cannot generate answer."}
-        
-        response = llm_model.generate_content(prompt)
-        answer = response.text if response.text else "Не удалось сгенерировать ответ."
+        results = []
+        for idx in top_indices:
+            file_path = embeddings_data[idx]["file_path"]
+            similarity = similarities[idx]
+            
+            # Извлечение названия заметки из пути файла
+            title = os.path.splitext(os.path.basename(file_path))[0]
+            
+            # Формирование GitHub URL для файла
+            github_url = f"https://github.com/{GITHUB_NOTES_REPO_OWNER}/{GITHUB_NOTES_REPO_NAME}/blob/main/{file_path}"
+            
+            results.append({
+                "title": title,
+                "url": github_url,
+                "similarity": float(similarity)
+            })
         
         return {
             "query": query,
-            "result": answer,
-            "source": file_path,
-            "similarity": float(best_similarity),
+            "results": results,
             "timestamp": timestamp
         }
+    except Exception as e:
+        print(f"DEBUG: Exception caught: {e}")
+        return {"error": f"Search failed: {str(e)}"}
     except Exception as e:
         return {"error": f"Search failed: {str(e)}"}
