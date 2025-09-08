@@ -1,0 +1,38 @@
+{
+  "version": 2,
+  "installCommand": "npm install",
+  "buildCommand": "npm run build --workspace=frontend && npm run build --workspace=backend",
+  "devCommand": "npm run dev --workspace=frontend",
+  "builds": [
+    {
+      "src": "frontend/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "frontend/dist"
+      }
+    },
+    {
+      "src": "backend/package.json",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["backend/dist/**"],
+        "maxLambdaSize": "15mb"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "backend/dist/index.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "frontend/dist/$1"
+    }
+  ],
+  
+  "env": {
+    "NODE_VERSION": "20"
+  },
+  "framework": null
+}

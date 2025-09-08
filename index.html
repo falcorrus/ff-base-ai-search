@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Search Frontend</title>
+</head>
+<body>
+    <h1>AI Search Frontend</h1>
+    <p id="backend-status">Connecting to backend...</p>
+    <input type="text" id="search-input" placeholder="Enter your query">
+    <button id="search-button">Search</button>
+    <p id="search-results"></p>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const backendStatus = document.getElementById('backend-status');
+            const searchInput = document.getElementById('search-input');
+            const searchButton = document.getElementById('search-button');
+            const searchResults = document.getElementById('search-results');
+
+            // Check backend status
+            try {
+                const response = await fetch('http://localhost:8000/');
+                const data = await response.json();
+                backendStatus.textContent = `Backend Status: ${data.message}`;
+            } catch (error) {
+                backendStatus.textContent = 'Backend Status: Not reachable. Please ensure the backend is running.';
+                console.error('Error connecting to backend:', error);
+            }
+
+            // Search functionality
+            searchButton.addEventListener('click', async () => {
+                const query = searchInput.value;
+                if (query) {
+                    try {
+                        const response = await fetch(`http://localhost:8000/search?query=${encodeURIComponent(query)}`);
+                        const data = await response.json();
+                        searchResults.textContent = `Search Result: ${data.result}`;
+                    } catch (error) {
+                        searchResults.textContent = 'Error during search. Is the backend running?';
+                        console.error('Error during search:', error);
+                    }
+                } else {
+                    searchResults.textContent = 'Please enter a query.';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
