@@ -21,7 +21,7 @@ class KnowledgeBaseUpdater:
     def __init__(self, github_token: str, repo_owner: str, repo_name: str, 
                  embeddings_file: str, gemini_api_key: str, batch_size: int = 3, 
                  max_file_size: int = 1024 * 1024, rate_limit_delay: float = 0.1,
-                 max_recursion_depth: int = 10):
+                 max_recursion_depth: int = 15):  # Увеличил максимальную глубину рекурсии
         self.github_token = github_token
         self.repo_owner = repo_owner
         self.repo_name = repo_name
@@ -42,8 +42,14 @@ class KnowledgeBaseUpdater:
         try:
             print("Starting knowledge base update...")
             
-            # Используем новый метод для получения всех файлов
+            # Попробуем сначала использовать новый метод с пагинацией
             files = await self._get_all_github_files_with_pagination()
+            
+            # Если новый метод не дал результатов, используем старый рекурсивный метод
+            if not files:
+                print("Pagination method failed, falling back to recursive method...")
+                files = await self._get_github_files_async()
+            
             if not files:
                 return {"message": "No files found or error occurred", "files_processed": 0}
             
@@ -97,64 +103,103 @@ class KnowledgeBaseUpdater:
             raise HTTPException(status_code=500, detail=f"Failed to update knowledge base: {str(e)}")
     
     async def _get_all_github_files_with_pagination(self) -> List[FileInfo]:
-        """Получение всех .md файлов из репозитория с использованием Contents API и пагинации"""
+        """Получение всех .md файлов из репозитория с использованием Contents API и пагинацией по директориям"""
         headers = {
             "Authorization": f"Bearer {self.github_token}",
             "Accept": "application/vnd.github.v3+json"
         }
         
         all_files = []
-        page = 1
-        per_page = 100  # Максимальное количество элементов на странице
         
         async with aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=30),
             headers=headers
         ) as session:
-            while True:
-                # Используем поиск для нахождения всех .md файлов
-                search_url = (f"https://api.github.com/search/code?"
-                             f"q=repo:{self.repo_owner}/{self.repo_name}+extension:.md&"
-                             f"per_page={per_page}&page={page}")
+            try:
+                # Получаем корневую директорию
+                root_files = await self._get_directory_contents(session, "")
+                all_files.extend(root_files)
                 
-                try:
-                    await asyncio.sleep(self.rate_limit_delay)
-                    async with session.get(search_url) as response:
-                        if response.status == 200:
-                            data = await response.json()
-                            items = data.get("items", [])
-                            
-                            if not items:
-                                break
-                            
-                            # Добавляем найденные файлы
-                            for item in items:
-                                file_info = FileInfo(
-                                    path=item["path"],
+                # Рекурсивно обходим все поддиректории
+                dirs_to_process = [f.path for f in root_files if f.path.endswith("/")]
+                
+                while dirs_to_process:
+                    current_dir = dirs_to_process.pop(0)
+                    print(f"Processing directory: {current_dir}")
+                    
+                    try:
+                        sub_files = await self._get_directory_contents(session, current_dir)
+                        md_files = [f for f in sub_files if f.path.endswith(".md")]
+                        all_files.extend(md_files)
+                        
+                        # Добавляем поддиректории в очередь
+                        sub_dirs = [f.path for f in sub_files if f.path.endswith("/")]
+                        dirs_to_process.extend(sub_dirs)
+                        
+                        # Небольшая задержка для соблюдения rate limit
+                        await asyncio.sleep(self.rate_limit_delay)
+                        
+                    except Exception as e:
+                        print(f"Error processing directory {current_dir}: {e}")
+                        continue
+                        
+            except Exception as e:
+                print(f"Error in pagination method: {e}")
+                return []
+        
+        # Убираем дубликаты и директории
+        unique_files = []
+        seen_paths = set()
+        
+        for file_info in all_files:
+            if file_info.path.endswith(".md") and file_info.path not in seen_paths:
+                unique_files.append(file_info)
+                seen_paths.add(file_info.path)
+        
+        print(f"Total .md files found via pagination: {len(unique_files)}")
+        return unique_files
+    
+    async def _get_directory_contents(self, session: aiohttp.ClientSession, path: str) -> List[FileInfo]:
+        """Получение содержимого директории"""
+        # Кодируем путь для URL
+        encoded_path = path.replace(" ", "%20")
+        url = f"https://api.github.com/repos/{self.repo_owner}/{self.repo_name}/contents/{encoded_path}"
+        
+        try:
+            await asyncio.sleep(self.rate_limit_delay)
+            async with session.get(url) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    files = []
+                    
+                    for item in data:
+                        file_path = item["path"]
+                        
+                        if item["type"] == "file" and file_path.endswith(".md"):
+                            # Проверяем размер файла
+                            if item.get("size", 0) <= self.max_file_size:
+                                files.append(FileInfo(
+                                    path=file_path,
                                     sha=item["sha"],
-                                    size=0  # Размер будет получен позже при необходимости
-                                )
-                                all_files.append(file_info)
-                            
-                            # Проверяем, есть ли еще страницы
-                            if len(items) < per_page:
-                                break
-                            
-                            page += 1
-                            
-                            # Ограничиваем количество запросов для бесплатного тарифа GitHub
-                            if page > 30:  # Ограничение для бесплатного тарифа (3000 запросов/час)
-                                print("Reached GitHub API rate limit, stopping pagination")
-                                break
-                        else:
-                            print(f"Error searching files: {response.status}")
-                            break
-                except Exception as e:
-                    print(f"Exception in file search: {e}")
-                    break
-            
-            print(f"Total .md files found via search: {len(all_files)}")
-            return all_files
+                                    size=item.get("size", 0)
+                                ))
+                            else:
+                                print(f"Skipping large file: {file_path} ({item.get('size', 0)} bytes)")
+                        elif item["type"] == "dir":
+                            # Добавляем слэш в конце для обозначения директории
+                            files.append(FileInfo(
+                                path=file_path + "/",
+                                sha=item["sha"],
+                                size=0
+                            ))
+                    
+                    return files
+                else:
+                    print(f"Error fetching directory contents for {path}: {response.status}")
+                    return []
+        except Exception as e:
+            print(f"Exception getting directory contents for {path}: {e}")
+            return []
     
     async def _get_github_files_async(self) -> List[FileInfo]:
         """Оригинальный метод для обратной совместимости"""
@@ -179,7 +224,7 @@ class KnowledgeBaseUpdater:
                 all_files = []
                 await self._fetch_tree_recursive_async(session, tree_sha, "", all_files, 0)
                 
-                print(f"Total .md files found: {len(all_files)}")
+                print(f"Total .md files found via recursive method: {len(all_files)}")
                 return all_files
                 
             except Exception as e:
