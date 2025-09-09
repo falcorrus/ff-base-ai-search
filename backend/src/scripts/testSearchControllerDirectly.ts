@@ -1,5 +1,6 @@
 // testSearchControllerDirectly.ts
 import { SearchController } from '../controllers/searchController';
+import { VectorDbService } from '../services/vectorDbService';
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -10,8 +11,11 @@ async function testSearchController() {
   try {
     console.log('Testing search controller directly...');
     
+    // Create an instance of the vector database service
+    const vectorDbService = new VectorDbService();
+    
     // Create an instance of the search controller
-    const searchController = new SearchController();
+    const searchController = new SearchController(vectorDbService);
     
     // Mock request and response objects
     const mockReq = {

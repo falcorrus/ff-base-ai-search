@@ -1,0 +1,110 @@
+﻿// Automatic FlutterFlow imports
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/widgets/index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart';
+// Begin custom widget code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+
+// Выделение по словам
+
+
+class SearchText extends StatefulWidget {
+  const SearchText({
+    super.key,
+    this.width,
+    this.height,
+    required this.fullText,
+    this.searchText,
+  });
+
+
+  final double? width;
+  final double? height;
+  final String fullText;
+  final String? searchText;
+
+
+  @override
+  State<SearchText> createState() => _SearchTextState();
+}
+
+
+class _SearchTextState extends State<SearchText> {
+  List<TextSpan> _getHighlightedSpans() {
+    if (widget.searchText == null || widget.searchText!.trim().isEmpty) {
+      return [
+        TextSpan(
+          text: widget.fullText,
+          style: FlutterFlowTheme.of(context).bodyMedium,
+        ),
+      ];
+    }
+
+
+    final searchWords = widget.searchText!
+        .toLowerCase()
+        .trim()
+        .split(RegExp(r'\s+')); // Разделяем поисковый текст по пробелам
+    final fullWords =
+        widget.fullText.split(' '); // Разделяем по пробелам с их сохранением
+
+
+    List<TextSpan> spans = [];
+
+
+    for (int i = 0; i < fullWords.length; i++) {
+      String word = fullWords[i];
+
+
+      if (searchWords.contains(word.toLowerCase())) {
+        spans.add(TextSpan(
+          text: word,
+          style: FlutterFlowTheme.of(context).bodyMedium.copyWith(
+                backgroundColor: Colors.yellow,
+                color: Colors.black,
+              ),
+        ));
+      } else {
+        spans.add(TextSpan(
+          text: word,
+          style: FlutterFlowTheme.of(context).bodyMedium,
+        ));
+      }
+
+
+      // Добавляем пробел между словами, кроме последнего
+      if (i < fullWords.length - 1) {
+        spans.add(TextSpan(
+          text: ' ', // Восстанавливаем пробелы между словами
+          style: FlutterFlowTheme.of(context).bodyMedium,
+        ));
+      }
+    }
+
+
+    return spans;
+  }
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: widget.width ?? double.infinity,
+      height: widget.height ?? 50.0, // Высота по умолчанию
+      constraints: BoxConstraints(
+        minHeight: 20.0, // Минимальная высота для избежания ошибок компоновки
+      ),
+      child: RichText(
+        text: TextSpan(
+          children: _getHighlightedSpans(),
+          style: FlutterFlowTheme.of(context).bodyMedium,
+        ),
+        overflow: TextOverflow.ellipsis,
+      ),
+    );
+  }
+}

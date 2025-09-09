@@ -1,0 +1,38 @@
+Пакеты
+dotted_border: ^2.0.0
+
+Параметры, их типы данных и назначение:
+width - double? - Ширина контейнера.
+height - double? - Высота контейнера.
+radiusContainer - double - Радиус закругления углов контейнера.
+colorDottedBorder - Color - Цвет пунктирной границы.
+widtthDottedBorder - double - Толщина пунктирной границы.
+colorBackground - Color - Цвет фона контейнера.
+paddingLeft - double - Левый отступ для контейнера.
+paddingRight - double - Правый отступ для контейнера.
+paddingTop - double - Верхний отступ для контейнера.
+paddingBottom - double - Нижний отступ для контейнера.
+icon - Widget? - Иконка, отображаемая слева внутри контейнера.
+paddingLeftIcon - double - Левый отступ для иконки.
+paddingRightIcon - double - Правый отступ для иконки.
+paddingTopIcon - double - Верхний отступ для иконки.
+paddingBottomIcon - double - Нижний отступ для иконки.
+text1 - String? - Первый текст, который отображается внутри контейнера.
+paddingLeftText1 - double - Левый отступ для текста 1.
+paddingRightText1 - double - Правый отступ для текста 1.
+paddingTopText1 - double - Верхний отступ для текста 1.
+paddingBottomText1 - double - Нижний отступ для текста 1.
+colorText1 - Color - Цвет текста 1.
+sizeText1 - double - Размер текста 1.
+positionText1 - String - Позиция выравнивания текста 1 (left, right, center).
+fontWeightText1 - String - Жирность текста 1 (w100, w200, ..., w900).
+text2 - String? - Второй текст, который отображается внутри контейнера.
+paddingLeftText2 - double - Левый отступ для текста 2.
+paddingRightText2 - double - Правый отступ для текста 2.
+paddingTopText2 - double - Верхний отступ для текста 2.
+paddingBottomText2 - double - Нижний отступ для текста 2.
+colorText2 - Color - Цвет текста 2.
+sizeText2 - double - Размер текста 2.
+positionText2 - String - Позиция выравнивания текста 2 (left, right, center).
+fontWeightText2 - String - Жирность текста 2 (w100, w200, ..., w900).
+containerPosition - String - Позиция контейнера (left, right, center).

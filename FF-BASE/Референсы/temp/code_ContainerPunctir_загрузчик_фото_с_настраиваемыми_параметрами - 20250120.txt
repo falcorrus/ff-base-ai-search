@@ -1,0 +1,258 @@
+// Automatic FlutterFlow imports
+import '/backend/backend.dart';
+import '/backend/schema/structs/index.dart';
+import '/backend/schema/enums/enums.dart';
+import '/flutter_flow/flutter_flow_theme.dart';
+import '/flutter_flow/flutter_flow_util.dart';
+import '/custom_code/widgets/index.dart'; // Imports other custom widgets
+import '/custom_code/actions/index.dart'; // Imports custom actions
+import '/flutter_flow/custom_functions.dart'; // Imports custom functions
+import 'package:flutter/material.dart';
+// Begin custom widget code
+// DO NOT REMOVE OR MODIFY THE CODE ABOVE!
+
+import '/custom_code/widgets/index.dart';
+import '/custom_code/actions/index.dart';
+import '/flutter_flow/custom_functions.dart';
+
+// Импорт библиотеки для создания пунктирной границы
+import 'package:dotted_border/dotted_border.dart';
+
+// Виджет "Контейнер с пунктирной границей"
+class ContainerPunctir extends StatefulWidget {
+  const ContainerPunctir({
+    super.key,
+    this.width, // Ширина контейнера
+    this.height, // Высота контейнера
+    this.radiusContainer = 0.0, // Радиус закругления углов
+    this.colorDottedBorder =
+        const Color.fromARGB(130, 50, 50, 49), // Цвет пунктирной границы
+    this.widtthDottedBorder = 1.5, // Толщина пунктирной границы
+    this.colorBackground = Colors.transparent, // Цвет фона
+    this.paddingLeft = 0.0, // Левый отступ контейнера
+    this.paddingRight = 0.0, // Правый отступ контейнера
+    this.paddingTop = 0.0, // Верхний отступ контейнера
+    this.paddingBottom = 0.0, // Нижний отступ контейнера
+    this.icon, // Иконка, отображаемая слева
+    this.paddingLeftIcon = 0.0, // Левый отступ иконки
+    this.paddingRightIcon = 0.0, // Правый отступ иконки
+    this.paddingTopIcon = 0.0, // Верхний отступ иконки
+    this.paddingBottomIcon = 0.0, // Нижний отступ иконки
+    this.text1, // Первый текст
+    this.paddingLeftText1 = 0.0, // Левый отступ для текста 1
+    this.paddingRightText1 = 0.0, // Правый отступ для текста 1
+    this.paddingTopText1 = 0.0, // Верхний отступ для текста 1
+    this.paddingBottomText1 = 0.0, // Нижний отступ для текста 1
+    this.colorText1 = Colors.black, // Цвет текста 1
+    this.sizeText1 = 14.0, // Размер текста 1
+    this.positionText1 = "center", // Позиция выравнивания текста 1
+    this.fontWeightText1 = "w400", // Жирность текста 1
+    this.text2, // Второй текст
+    this.paddingLeftText2 = 0.0, // Левый отступ для текста 2
+    this.paddingRightText2 = 0.0, // Правый отступ для текста 2
+    this.paddingTopText2 = 0.0, // Верхний отступ для текста 2
+    this.paddingBottomText2 = 0.0, // Нижний отступ для текста 2
+    this.colorText2 = Colors.black, // Цвет текста 2
+    this.sizeText2 = 11.0, // Размер текста 2
+    this.positionText2 = "center", // Позиция выравнивания текста 2
+    this.fontWeightText2 = "w300", // Жирность текста 2
+    this.containerPosition = "center", // Позиция контейнера
+  });
+
+  // Параметры виджета
+  final double? width;
+  final double? height;
+  final double radiusContainer;
+  final Color colorDottedBorder;
+  final double widtthDottedBorder;
+  final Color colorBackground;
+  final double paddingLeft;
+  final double paddingRight;
+  final double paddingTop;
+  final double paddingBottom;
+  final Widget? icon;
+  final double paddingLeftIcon;
+  final double paddingRightIcon;
+  final double paddingTopIcon;
+  final double paddingBottomIcon;
+  final String? text1;
+  final double paddingLeftText1;
+  final double paddingRightText1;
+  final double paddingTopText1;
+  final double paddingBottomText1;
+  final Color colorText1;
+  final double sizeText1;
+  final String positionText1;
+  final String fontWeightText1;
+  final String? text2;
+  final double paddingLeftText2;
+  final double paddingRightText2;
+  final double paddingTopText2;
+  final double paddingBottomText2;
+  final Color colorText2;
+  final double sizeText2;
+  final String positionText2;
+  final String fontWeightText2;
+  final String containerPosition;
+
+  @override
+  State<ContainerPunctir> createState() => _ContainerPunctirState();
+}
+
+class _ContainerPunctirState extends State<ContainerPunctir> {
+  // Метод для преобразования строкового значения жирности в объект FontWeight
+  FontWeight _getFontWeight(String fontWeight) {
+    switch (fontWeight) {
+      case 'w100':
+        return FontWeight.w100;
+      case 'w200':
+        return FontWeight.w200;
+      case 'w300':
+        return FontWeight.w300;
+      case 'w400':
+        return FontWeight.w400;
+      case 'w500':
+        return FontWeight.w500;
+      case 'w600':
+        return FontWeight.w600;
+      case 'w700':
+        return FontWeight.w700;
+      case 'w800':
+        return FontWeight.w800;
+      case 'w900':
+        return FontWeight.w900;
+      default:
+        return FontWeight.w400;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Определение выравнивания содержимого контейнера
+    MainAxisAlignment containerAlignment;
+    switch (widget.containerPosition) {
+      case "left":
+        containerAlignment = MainAxisAlignment.start;
+        break;
+      case "right":
+        containerAlignment = MainAxisAlignment.end;
+        break;
+      case "center":
+      default:
+        containerAlignment = MainAxisAlignment.center;
+        break;
+    }
+
+    // Определение выравнивания текста 1
+    TextAlign textAlign1;
+    switch (widget.positionText1) {
+      case "left":
+        textAlign1 = TextAlign.left;
+        break;
+      case "right":
+        textAlign1 = TextAlign.right;
+        break;
+      case "center":
+      default:
+        textAlign1 = TextAlign.center;
+        break;
+    }
+
+    // Определение выравнивания текста 2
+    TextAlign textAlign2;
+    switch (widget.positionText2) {
+      case "left":
+        textAlign2 = TextAlign.left;
+        break;
+      case "right":
+        textAlign2 = TextAlign.right;
+        break;
+      case "center":
+      default:
+        textAlign2 = TextAlign.center;
+        break;
+    }
+
+    return DottedBorder(
+      color: widget.colorDottedBorder, // Цвет пунктирной границы
+      strokeWidth: widget.widtthDottedBorder, // Толщина пунктирной границы
+      dashPattern: [6, 3], // Шаблон линии: длина штриха и пробела
+      borderType: BorderType.RRect, // Тип границы: закругленные углы
+      radius: Radius.circular(widget.radiusContainer), // Радиус углов.
+      child: Container(
+        width: widget.width ?? double.infinity, // Установка ширины
+        height: widget.height ?? 60.0, // Установка высоты
+        color: widget.colorBackground, // Цвет фона
+        padding: EdgeInsets.only(
+          left: widget.paddingLeft,
+          right: widget.paddingRight,
+          top: widget.paddingTop,
+          bottom: widget.paddingBottom,
+        ), // Внутренние отступы
+        child: Row(
+          mainAxisAlignment:
+              containerAlignment, // Установка выравнивания содержимого
+          children: [
+            // Иконка, если она задана
+            if (widget.icon != null)
+              Padding(
+                padding: EdgeInsets.only(
+                  left: widget.paddingLeftIcon,
+                  right: widget.paddingRightIcon,
+                  top: widget.paddingTopIcon,
+                  bottom: widget.paddingBottomIcon,
+                ), // Отступы иконки
+                child: widget.icon,
+              ),
+
+            // Текстовые элементы
+            if (widget.text1 != null || widget.text2 != null)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (widget.text1 != null)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: widget.paddingLeftText1,
+                        right: widget.paddingRightText1,
+                        top: widget.paddingTopText1,
+                        bottom: widget.paddingBottomText1,
+                      ),
+                      child: Text(
+                        widget.text1!,
+                        textAlign: textAlign1,
+                        style: TextStyle(
+                          fontSize: widget.sizeText1, // Размер текста 1
+                          color: widget.colorText1, // Цвет текста 1
+                          fontWeight: _getFontWeight(
+                              widget.fontWeightText1), // Жирность текста 1
+                        ),
+                      ),
+                    ),
+                  if (widget.text2 != null)
+                    Padding(
+                      padding: EdgeInsets.only(
+                        left: widget.paddingLeftText2,
+                        right: widget.paddingRightText2,
+                        top: widget.paddingTopText2,
+                        bottom: widget.paddingBottomText2,
+                      ),
+                      child: Text(
+                        widget.text2!,
+                        textAlign: textAlign2,
+                        style: TextStyle(
+                          fontSize: widget.sizeText2, // Размер текста 2
+                          color: widget.colorText2, // Цвет текста 2
+                          fontWeight: _getFontWeight(
+                              widget.fontWeightText2), // Жирность текста 2
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}

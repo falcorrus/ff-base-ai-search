@@ -1,0 +1,114 @@
+
+import 'package:custom_image_crop/custom_image_crop.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'dart:typed_data';
+
+class ImageCropScreen extends StatefulWidget {
+  const ImageCropScreen({
+    Key? key,
+    this.width,
+    this.height,
+    this.buttonColor,
+    this.iconColor,
+    this.action,
+  }) : super(key: key);
+
+  final double? width;
+  final double? height;
+  final Color? buttonColor;
+  final Color? iconColor;
+  final Future Function()? action;
+
+  @override
+  _ImageCropScreenState createState() => _ImageCropScreenState();
+}
+
+class _ImageCropScreenState extends State<ImageCropScreen> {
+  final CustomImageCropController _cropController = CustomImageCropController();
+  Uint8List? _imageData;
+
+  Future<void> _pickImage() async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      final bytes = await pickedFile.readAsBytes();
+      setState(() {
+        _imageData = bytes;
+      });
+      // Добавляем задержку перед обновлением состояния
+      Future.delayed(Duration(milliseconds: 500), () {
+        _updateCroppedImage(); // Обновляем AppState после инициализации изображения
+      });
+    }
+  }
+
+  void _zoomIn() {
+    _cropController.addTransition(CropImageData(scale: 1.1));
+    _updateCroppedImage(); // Обновляем AppState после изменения масштаба
+  }
+
+  void _zoomOut() {
+    _cropController.addTransition(CropImageData(scale: 0.9));
+    _updateCroppedImage(); // Обновляем AppState после изменения масштаба
+  }
+
+  Future<void> _updateCroppedImage() async {
+    if (_imageData != null) {
+      final croppedImage = await _cropController.onCropImage();
+      if (croppedImage != null) {
+        List<int> imageListInt = croppedImage.bytes.toList();
+        Provider.of<FFAppState>(context, listen: false).photoCamera =
+            imageListInt;
+        if (widget.action != null) {
+          await widget.action!();
+        }
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: _pickImage,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: widget.width ?? double.infinity,
+            height: widget.height ?? double.infinity,
+            color: widget.buttonColor ?? Colors.grey[300],
+            child: Listener(
+              onPointerUp: (_) => _updateCroppedImage(),
+              child: _imageData != null
+                  ? CustomImageCrop(
+                      cropController: _cropController,
+                      image: MemoryImage(_imageData!),
+                    )
+                  : Center(
+                      child: Icon(Icons.add_photo_alternate,
+                          size: 48, color: widget.iconColor ?? Colors.black),
+                    ),
+            ),
+          ),
+          if (_imageData != null) ...[
+            Align(
+              alignment: Alignment.topCenter,
+              child: IconButton(
+                icon: Icon(Icons.zoom_in, color: widget.iconColor),
+                onPressed: _zoomIn,
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: IconButton(
+                icon: Icon(Icons.zoom_out, color: widget.iconColor),
+                onPressed: _zoomOut,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}

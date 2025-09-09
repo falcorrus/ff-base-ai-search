@@ -1,0 +1,144 @@
+
+import 'dart:math';
+
+class GradientBorderMessage extends StatefulWidget {
+  const GradientBorderMessage({
+    Key? key,
+    this.width,
+    this.height,
+    required this.child,
+    required this.strokeWidth,
+    required this.topLeftRadius,
+    required this.topRightRadius,
+    required this.bottomLeftRadius,
+    required this.bottomRightRadius,
+    required this.gradientColors,
+    this.gradientAngle = 0.0, // Угол градиента (по умолчанию 0 градусов)
+  }) : super(key: key);
+
+  final double? width;
+  final double? height;
+  final Widget Function() child;
+  final double strokeWidth;
+  final double topLeftRadius;
+  final double topRightRadius;
+  final double bottomLeftRadius;
+  final double bottomRightRadius;
+  final List<Color> gradientColors;
+  final double gradientAngle; // Угол градиента в градусах
+
+  @override
+  State<GradientBorderMessage> createState() => _GradientBorderMessageState();
+}
+
+class _GradientBorderMessageState extends State<GradientBorderMessage> {
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicWidth(
+      child: IntrinsicHeight(
+        child: Container(
+          // Используем размеры только если они заданы, иначе подстраиваемся под дочерний виджет
+          width: widget.child == null ? widget.width : null,
+          height: widget.child == null ? widget.height : null,
+          child: Stack(
+            children: [
+              // Градиентная обводка
+              CustomPaint(
+                painter: GradientBorderPainter(
+                  strokeWidth: widget.strokeWidth,
+                  topLeftRadius: widget.topLeftRadius,
+                  topRightRadius: widget.topRightRadius,
+                  bottomLeftRadius: widget.bottomLeftRadius,
+                  bottomRightRadius: widget.bottomRightRadius,
+                  gradientColors: widget.gradientColors,
+                  gradientAngle: widget.gradientAngle, // Передаем угол наклона
+                ),
+                child: Container(), // Пустой контейнер для обводки
+              ),
+              // Сообщение внутри обводки
+              Padding(
+                padding: EdgeInsets.all(widget.strokeWidth),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(widget.topLeftRadius),
+                    topRight: Radius.circular(widget.topRightRadius),
+                    bottomLeft: Radius.circular(widget.bottomLeftRadius),
+                    bottomRight: Radius.circular(widget.bottomRightRadius),
+                  ),
+                  child: widget.child(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class GradientBorderPainter extends CustomPainter {
+  final double strokeWidth;
+  final double topLeftRadius;
+  final double topRightRadius;
+  final double bottomLeftRadius;
+  final double bottomRightRadius;
+  final List<Color> gradientColors;
+  final double gradientAngle; // Угол градиента в градусах
+
+  GradientBorderPainter({
+    required this.strokeWidth,
+    required this.topLeftRadius,
+    required this.topRightRadius,
+    required this.bottomLeftRadius,
+    required this.bottomRightRadius,
+    required this.gradientColors,
+    required this.gradientAngle,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Преобразуем угол из градусов в радианы
+    double angleInRadians = gradientAngle * pi / 180;
+
+    // Вычисляем координаты начала и конца градиента
+    Alignment begin = Alignment(cos(angleInRadians), sin(angleInRadians));
+    Alignment end = Alignment(-cos(angleInRadians), -sin(angleInRadians));
+
+    // Создаем градиент для обводки с учетом наклона
+    final gradient = LinearGradient(
+      begin: begin,
+      end: end,
+      colors: gradientColors,
+    );
+
+    // Задаем прямоугольник по границам виджета
+    final rect = Rect.fromLTWH(
+      strokeWidth / 2, // Отступы для корректной обводки
+      strokeWidth / 2,
+      size.width - strokeWidth,
+      size.height - strokeWidth,
+    );
+
+    // Кисть с градиентом
+    final paint = Paint()
+      ..shader = gradient.createShader(rect)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth;
+
+    // Рисуем обводку с закругленными углами
+    final rrect = RRect.fromRectAndCorners(
+      rect,
+      topLeft: Radius.circular(topLeftRadius),
+      topRight: Radius.circular(topRightRadius),
+      bottomLeft: Radius.circular(bottomLeftRadius),
+      bottomRight: Radius.circular(bottomRightRadius),
+    );
+
+    canvas.drawRRect(rrect, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
+}

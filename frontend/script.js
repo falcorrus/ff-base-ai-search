@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Показываем индикатор загрузки
-        resultsDiv.innerHTML = '<div class="loading">Идет поиск...</div>'; // Changed message
+        resultsDiv.innerHTML = '<div class="loading">Идет поиск...</div>';
         resultsDiv.className = 'loading';
 
         try {
@@ -42,16 +42,22 @@ document.addEventListener('DOMContentLoaded', () => {
             // Отображаем результаты
             if (data.error) {
                 resultsDiv.innerHTML = `<div class="error">Ошибка: ${data.error}</div>`;
-            } else if (data.results && data.results.length > 0) { // Check for results array
-                let htmlContent = '<h2>Найденные заметки:</h2><ul>';
-                data.results.forEach(note => {
-                    htmlContent += `<li><a href="${note.url}" target="_blank">${note.title}</a> (Релевантность: ${(note.similarity * 100).toFixed(2)}%)</li>`;
+            } else if (data.relevant_documents && data.relevant_documents.length > 0) {
+                // Display the AI-generated answer
+                let htmlContent = `<h2>Ответ:</h2><p>${data.answer}</p>`;
+                
+                // Display relevant documents
+                htmlContent += '<h3>Найденные заметки:</h3><ul>';
+                data.relevant_documents.forEach(doc => {
+                    // Extract filename from file_path for display
+                    const fileName = doc.file_path.split('/').pop().replace('.md', '');
+                    htmlContent += `<li><a href="#" target="_blank">${fileName}</a> (Релевантность: ${(doc.similarity * 100).toFixed(2)}%)</li>`;
                 });
                 htmlContent += '</ul>';
-                htmlContent += `<p><strong>Время запроса:</strong> ${data.timestamp}</p>`;
+                
                 resultsDiv.innerHTML = `<div class="success">${htmlContent}</div>`;
             } else {
-                resultsDiv.innerHTML = '<div class="info">По вашему запросу заметки не найдены.</div>'; // Changed message
+                resultsDiv.innerHTML = '<div class="info">По вашему запросу заметки не найдены.</div>';
             }
         } catch (error) {
             resultsDiv.innerHTML = `<div class="error">Ошибка при выполнении поиска: ${error.message}</div>`;

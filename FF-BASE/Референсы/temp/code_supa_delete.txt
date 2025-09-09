@@ -1,0 +1,63 @@
+Замените
+<SECRET KEY (not anon)>
+<PROJECT_NAME>
+SECRET KEY выполняется только с сервера Supabase, он не будет виден на клиенте.
+
+CREATE OR REPLACE FUNCTION delete_current_user()
+RETURNS json AS
+$$
+DECLARE
+    req http_request;
+    resp http_response;
+    api_key text := '<SECRET KEY (not anon)>';
+    base_url text := 'https://<PROJECT_NAME>.supabase.co/auth/v1/admin/users/';
+    user_id text;
+    result json;
+BEGIN
+    -- Извлекаем user_id из JWT токена текущего пользователя
+    user_id := (current_setting('request.jwt.claims', true)::json->>'sub');
+    
+    IF user_id IS NULL THEN
+        RETURN json_build_object('success', false, 'message', 'No user ID found in JWT token');
+    END IF;
+    
+    -- Формируем HTTP-запрос
+    req.method := 'DELETE';
+    req.uri := base_url || user_id;
+    req.headers := ARRAY[
+        ROW('apikey', api_key)::http_header,
+        ROW('Authorization', 'Bearer ' || api_key)::http_header,
+        ROW('Content-Type', 'application/json')::http_header
+    ];
+    
+    -- Выполняем запрос с помощью базовой функции http()
+    resp := http(req);
+    
+    -- Обрабатываем ответ
+    IF resp.status >= 200 AND resp.status < 300 THEN
+        -- Успешный ответ
+        IF resp.content IS NOT NULL AND resp.content != '' THEN
+            result := resp.content::json;
+        ELSE
+            result := json_build_object('success', true, 'message', 'User deleted successfully');
+        END IF;
+    ELSE
+        -- В случае ошибки
+        BEGIN
+            result := json_build_object(
+                'success', false,
+                'status', resp.status,
+                'error', COALESCE(resp.content::json, to_json(resp.content))
+            );
+        EXCEPTION WHEN OTHERS THEN
+            result := json_build_object(
+                'success', false,
+                'status', resp.status,
+                'error', resp.content
+            );
+        END;
+    END IF;
+    
+    RETURN result;
+END;
+$$ LANGUAGE plpgsql;  -- Убрали SECURITY DEFINER, теперь функция работает в режиме SECURITY INVOKER

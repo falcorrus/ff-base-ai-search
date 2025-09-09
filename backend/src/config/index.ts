@@ -22,7 +22,7 @@ for (const envVar of requiredEnvVars) {
 
 export const config = {
   // Порт сервера
-  PORT: process.env.PORT || 3001,
+  PORT: process.env.PORT || 3002,
   
   // GitHub конфигурация
   GITHUB: {
