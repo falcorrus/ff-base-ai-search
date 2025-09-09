@@ -1,65 +1,71 @@
-# Intelligent Search Backend
+# ff-base-ai-search Backend
 
-Backend для приложения "Intelligent Search", реализованный на Node.js с TypeScript и Express.js.
+This is the Python FastAPI backend for the ff-base-ai-search application, designed for intelligent search and comprehensive answer generation from personal Markdown notes.
 
-## Технологии
+## Technologies
 
-- **Node.js**: Среда выполнения JavaScript
-- **TypeScript**: Язык программирования для типобезопасной разработки
-- **Express.js**: Веб-фреймворк для Node.js
-- **Google Gemini API**: Для создания векторных представлений и генерации ответов
-- **Octokit**: Для работы с GitHub API
-- **JSON-файл**: Векторная база данных (для прототипа)
+- **Python 3.9+**: Programming language
+- **FastAPI**: Web framework for building APIs with Python
+- **Google Gemini API**: For creating embeddings and generating answers
+- **Local JSON Storage**: Embeddings stored in `knowledge_base/embeddings.json`
+- **Google Cloud Run**: Intended deployment platform
 
-## Структура проекта
+## Project Structure
 
 ```
 backend/
-├── src/
-│   ├── config/          # Конфигурация приложения
-│   ├── controllers/     # Контроллеры для обработки запросов
-│   ├── middleware/      # Промежуточное ПО
-│   ├── models/          # Модели данных
-│   ├── routes/          # Маршруты API
-│   ├── services/        # Сервисы для бизнес-логики
-│   ├── utils/           # Вспомогательные функции
-│   └── index.ts         # Точка входа приложения
-├── dist/                # Скомпилированный JavaScript код
-├── data/                # Данные приложения (векторная база)
-├── package.json         # Зависимости и скрипты
-├── tsconfig.json        # Конфигурация TypeScript
-└── .env.example         # Пример файла переменных окружения
+├── main.py                 # Main application file
+├── requirements.txt        # Python dependencies
+├── .env.example           # Example environment variables
+└── README.md              # This file
 ```
-
-## Доступные скрипты
-
-- `npm run dev` - Запуск приложения в режиме разработки с hot-reload
-- `npm run build` - Компиляция TypeScript в JavaScript
-- `npm start` - Запуск скомпилированного приложения
 
 ## API Endpoints
 
-### Поиск
+### Health Check
+- `GET /` - Health check endpoint
 
-- `GET /api/search?q={query}` - Поиск документов по запросу
-- `GET /api/note/:id` - Получение содержимого документа по ID
+### Knowledge Base Management
+- `GET /update-knowledge-base` - Update embeddings from local FF-BASE directory
 
-## Переменные окружения
+### Search
+- `GET /search?query={query}` - Search for relevant notes and generate answers
+- `GET /notes-count` - Get the total number of notes in the knowledge base
 
-Для работы приложения необходимо создать файл `.env` в корне проекта со следующими переменными:
+## Environment Variables
+
+Create a `.env` file in the backend directory with the following variables:
 
 ```
-GITHUB_TOKEN=your_github_token_here
-OPENAI_API_KEY=your_openai_api_key_here
-PORT=3001
-VECTOR_DB_PATH=./data/vector-db.json
+GOOGLE_API_KEY=your_google_api_key_here
+LOG_LEVEL=INFO
 ```
 
-Пример файла можно найти в `.env.example`.
+See `.env.example` for a template.
 
-## Разработка
+## Installation
 
-1. Установите зависимости: `npm install`
-2. Создайте файл `.env` с вашими переменными окружения
-3. Запустите приложение в режиме разработки: `npm run dev`
-4. Сервер будет доступен по адресу: `http://localhost:3001`
+1. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+2. Create a `.env` file with your Google API key:
+   ```bash
+   cp .env.example .env
+   # Edit .env to add your GOOGLE_API_KEY
+   ```
+
+## Running the Application
+
+To run the backend server:
+
+```bash
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+The server will be available at `http://localhost:8000`
+
+## Deployment
+
+This backend is designed for deployment on Google Cloud Run. For deployment instructions, refer to the Google Cloud Run documentation.
