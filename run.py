@@ -2,8 +2,8 @@
 import sys
 import os
 
-# Add the python directory to the path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'python'))
+# Add the backend directory to the path
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'backend'))
 
 # Import and run the main application
 from main import app

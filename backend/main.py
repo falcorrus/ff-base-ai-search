@@ -16,6 +16,9 @@ from dotenv import load_dotenv
 from sklearn.metrics.pairwise import cosine_similarity
 import requests
 
+# Google Cloud Storage
+from google.cloud import storage
+
 import google.generativeai as genai
 
 # --- Configuration ---
@@ -38,9 +41,14 @@ GITHUB_TOKEN = os.getenv("GITHUB_PAT")
 GITHUB_REPO_OWNER = os.getenv("GITHUB_REPO_OWNER", "falcorrus")
 GITHUB_REPO_NAME = os.getenv("GITHUB_REPO_NAME", "ff-base")
 
-# Data
-EMBEDDINGS_FILE = "knowledge_base/embeddings.json"
-SEARCH_LOG_FILE = "knowledge_base/search_log.json"
+# Google Cloud Storage
+GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME", "ff-base-embeddings")
+EMBEDDINGS_FILE_NAME = "embeddings.json"
+SEARCH_LOG_FILE_NAME = "search_log.json"
+
+# Local fallback
+EMBEDDINGS_FILE = "../knowledge_base/embeddings.json"
+SEARCH_LOG_FILE = "../knowledge_base/search_log.json"
 FF_BASE_DIR = "../FF-BASE"
 
 # --- Logging ---
@@ -66,23 +74,139 @@ app.add_middleware(
 # --- Knowledge Base ---
 knowledge_base: List[Dict] = []
 
-def load_knowledge_base():
-    """Load the knowledge base from the embeddings file."""
+def get_gcs_client():
+    """Get Google Cloud Storage client."""
+    try:
+        # Log the GOOGLE_APPLICATION_CREDENTIALS environment variable
+        logger.info(f"GOOGLE_APPLICATION_CREDENTIALS: {os.getenv('GOOGLE_APPLICATION_CREDENTIALS')}")
+        client = storage.Client()
+        logger.info("GCS client initialized successfully")
+        return client
+    except Exception as e:
+        logger.warning(f"Failed to initialize GCS client: {e}")
+        return None
+
+def load_knowledge_base_from_gcs():
+    """Load the knowledge base from Google Cloud Storage."""
+    global knowledge_base
+    try:
+        client = get_gcs_client()
+        if not client:
+            return False
+            
+        bucket = client.bucket(GCS_BUCKET_NAME)
+        blob = bucket.blob(EMBEDDINGS_FILE_NAME)
+        
+        if blob.exists():
+            # Download the file content
+            content = blob.download_as_text()
+            knowledge_base = json.loads(content)
+            logger.info(f"Knowledge base loaded from GCS with {len(knowledge_base)} documents.")
+            return True
+        else:
+            logger.warning("Embeddings file not found in GCS. Knowledge base is empty.")
+            knowledge_base = []
+            return False
+    except Exception as e:
+        logger.error(f"Error loading knowledge base from GCS: {e}")
+        return False
+
+def load_knowledge_base_from_local():
+    """Load the knowledge base from local file."""
     global knowledge_base
     if os.path.exists(EMBEDDINGS_FILE):
         try:
             with open(EMBEDDINGS_FILE, "r", encoding="utf-8") as f:
                 knowledge_base = json.load(f)
-            logger.info(f"Knowledge base loaded with {len(knowledge_base)} documents.")
+            logger.info(f"Knowledge base loaded from local file with {len(knowledge_base)} documents.")
+            return True
         except Exception as e:
-            logger.error(f"Error loading knowledge base: {e}")
+            logger.error(f"Error loading knowledge base from local file: {e}")
             knowledge_base = []
+            return False
     else:
-        logger.warning("Embeddings file not found. Knowledge base is empty.")
+        logger.warning("Local embeddings file not found. Knowledge base is empty.")
         knowledge_base = []
+        return False
 
-def save_search_log(query: str, timestamp: str):
-    """Save search query to log file."""
+def load_knowledge_base():
+    """Load the knowledge base from GCS if available, otherwise from local file."""
+    # Try to load from GCS first
+    if load_knowledge_base_from_gcs():
+        return
+    
+    # Fallback to local file
+    load_knowledge_base_from_local()
+
+def save_knowledge_base_to_gcs(embeddings_data: List[Dict]):
+    """Save the knowledge base to Google Cloud Storage."""
+    try:
+        client = get_gcs_client()
+        if not client:
+            return False
+            
+        bucket = client.bucket(GCS_BUCKET_NAME)
+        blob = bucket.blob(EMBEDDINGS_FILE_NAME)
+        
+        # Upload the file
+        content = json.dumps(embeddings_data, ensure_ascii=False, indent=2)
+        blob.upload_from_string(content, content_type="application/json")
+        
+        logger.info(f"Knowledge base saved to GCS with {len(embeddings_data)} documents.")
+        return True
+    except Exception as e:
+        logger.error(f"Error saving knowledge base to GCS: {e}")
+        return False
+
+def save_knowledge_base_to_local(embeddings_data: List[Dict]):
+    """Save the knowledge base to local file."""
+    try:
+        os.makedirs(os.path.dirname(EMBEDDINGS_FILE), exist_ok=True)
+        with open(EMBEDDINGS_FILE, "w", encoding="utf-8") as f:
+            json.dump(embeddings_data, f, ensure_ascii=False, indent=2)
+        logger.info(f"Knowledge base saved to local file with {len(embeddings_data)} documents.")
+        return True
+    except Exception as e:
+        logger.error(f"Error saving knowledge base to local file: {e}")
+        return False
+
+def save_search_log_to_gcs(query: str, timestamp: str):
+    """Save search query to log file in GCS."""
+    try:
+        client = get_gcs_client()
+        if not client:
+            return False
+            
+        bucket = client.bucket(GCS_BUCKET_NAME)
+        blob = bucket.blob(SEARCH_LOG_FILE_NAME)
+        
+        # Load existing logs
+        logs = []
+        if blob.exists():
+            try:
+                content = blob.download_as_text()
+                logs = json.loads(content)
+            except Exception as e:
+                logger.error(f"Error loading search logs from GCS: {e}")
+        
+        # Add new entry
+        log_entry = {
+            "query": query,
+            "timestamp": timestamp
+        }
+        logs.append(log_entry)
+        
+        # Save updated logs
+        content = json.dumps(logs, ensure_ascii=False, indent=2)
+        blob.upload_from_string(content, content_type="application/json")
+        
+        return True
+    except Exception as e:
+        logger.error(f"Error saving search log to GCS: {e}")
+        return False
+
+def save_search_log_to_local(query: str, timestamp: str):
+    """Save search query to local log file."""
     log_entry = {
         "query": query,
         "timestamp": timestamp
@@ -95,7 +219,7 @@ def save_search_log(query: str, timestamp: str):
             with open(SEARCH_LOG_FILE, "r", encoding="utf-8") as f:
                 logs = json.load(f)
         except Exception as e:
-            logger.error(f"Error loading search logs: {e}")
+            logger.error(f"Error loading search logs from local file: {e}")
     
     # Add new entry
     logs.append(log_entry)
@@ -106,7 +230,16 @@ def save_search_log(query: str, timestamp: str):
         with open(SEARCH_LOG_FILE, "w", encoding="utf-8") as f:
             json.dump(logs, f, ensure_ascii=False, indent=2)
     except Exception as e:
-        logger.error(f"Error saving search log: {e}")
+        logger.error(f"Error saving search log to local file: {e}")
+
+def save_search_log(query: str, timestamp: str):
+    """Save search query to log file (GCS if available, otherwise local)."""
+    # Try to save to GCS first
+    if save_search_log_to_gcs(query, timestamp):
+        return
+    
+    # Fallback to local file
+    save_search_log_to_local(query, timestamp)
 
 # --- Helper Functions ---
 def get_embedding(text: str) -> Optional[List[float]]:
@@ -149,22 +282,43 @@ async def update_knowledge_base_from_local() -> Dict:
         # Load existing embeddings and metadata
         existing_embeddings = {}
         existing_metadata = {}
-        if os.path.exists(EMBEDDINGS_FILE):
-            try:
-                with open(EMBEDDINGS_FILE, "r", encoding="utf-8") as f:
-                    existing_data = json.load(f)
-                    existing_embeddings = {item["file_path"]: item for item in existing_data}
-            except Exception as e:
-                logger.error(f"Error loading existing embeddings: {e}")
         
-        # Load metadata if it exists
-        metadata_file = EMBEDDINGS_FILE.replace(".json", "_metadata.json")
-        if os.path.exists(metadata_file):
+        # Try to load from GCS first
+        client = get_gcs_client()
+        if client:
             try:
-                with open(metadata_file, "r", encoding="utf-8") as f:
-                    existing_metadata = json.load(f)
+                bucket = client.bucket(GCS_BUCKET_NAME)
+                blob = bucket.blob(EMBEDDINGS_FILE_NAME)
+                if blob.exists():
+                    content = blob.download_as_text()
+                    existing_data = json.loads(content)
+                    existing_embeddings = {item["file_path"]: item for item in existing_data}
+                    
+                # Load metadata if it exists
+                metadata_blob = bucket.blob(EMBEDDINGS_FILE_NAME.replace(".json", "_metadata.json"))
+                if metadata_blob.exists():
+                    metadata_content = metadata_blob.download_as_text()
+                    existing_metadata = json.loads(metadata_content)
             except Exception as e:
-                logger.error(f"Error loading metadata: {e}")
+                logger.error(f"Error loading existing embeddings from GCS: {e}")
+        else:
+            # Fallback to local files
+            if os.path.exists(EMBEDDINGS_FILE):
+                try:
+                    with open(EMBEDDINGS_FILE, "r", encoding="utf-8") as f:
+                        existing_data = json.load(f)
+                        existing_embeddings = {item["file_path"]: item for item in existing_data}
+                except Exception as e:
+                    logger.error(f"Error loading existing embeddings from local file: {e}")
+            
+            # Load metadata if it exists
+            metadata_file = EMBEDDINGS_FILE.replace(".json", "_metadata.json")
+            if os.path.exists(metadata_file):
+                try:
+                    with open(metadata_file, "r", encoding="utf-8") as f:
+                        existing_metadata = json.load(f)
+                except Exception as e:
+                    logger.error(f"Error loading metadata from local file: {e}")
         
         # Process files incrementally
         embeddings_data = []
@@ -225,13 +379,37 @@ async def update_knowledge_base_from_local() -> Dict:
                 continue
         
         # Save embeddings
-        os.makedirs(os.path.dirname(EMBEDDINGS_FILE), exist_ok=True)
-        with open(EMBEDDINGS_FILE, "w", encoding="utf-8") as f:
-            json.dump(embeddings_data, f, ensure_ascii=False, indent=2)
-        
-        # Save metadata
-        with open(metadata_file, "w", encoding="utf-8") as f:
-            json.dump(existing_metadata, f, ensure_ascii=False, indent=2)
+        if client:
+            # Save to GCS
+            try:
+                bucket = client.bucket(GCS_BUCKET_NAME)
+                
+                # Save embeddings
+                blob = bucket.blob(EMBEDDINGS_FILE_NAME)
+                content = json.dumps(embeddings_data, ensure_ascii=False, indent=2)
+                blob.upload_from_string(content, content_type="application/json")
+                
+                # Save metadata
+                metadata_blob = bucket.blob(EMBEDDINGS_FILE_NAME.replace(".json", "_metadata.json"))
+                metadata_content = json.dumps(existing_metadata, ensure_ascii=False, indent=2)
+                metadata_blob.upload_from_string(metadata_content, content_type="application/json")
+                
+                logger.info(f"Knowledge base saved to GCS")
+            except Exception as e:
+                logger.error(f"Error saving to GCS: {e}")
+                # Fallback to local save
+                save_knowledge_base_to_local(embeddings_data)
+                # Save metadata locally
+                metadata_file = EMBEDDINGS_FILE.replace(".json", "_metadata.json")
+                with open(metadata_file, "w", encoding="utf-8") as f:
+                    json.dump(existing_metadata, f, ensure_ascii=False, indent=2)
+        else:
+            # Save to local file
+            save_knowledge_base_to_local(embeddings_data)
+            # Save metadata locally
+            metadata_file = EMBEDDINGS_FILE.replace(".json", "_metadata.json")
+            with open(metadata_file, "w", encoding="utf-8") as f:
+                json.dump(existing_metadata, f, ensure_ascii=False, indent=2)
         
         # Reload knowledge base
         load_knowledge_base()
@@ -288,22 +466,43 @@ async def update_knowledge_base_from_github() -> Dict:
         # Load existing embeddings and metadata
         existing_embeddings = {}
         existing_metadata = {}
-        if os.path.exists(EMBEDDINGS_FILE):
-            try:
-                with open(EMBEDDINGS_FILE, "r", encoding="utf-8") as f:
-                    existing_data = json.load(f)
-                    existing_embeddings = {item["file_path"]: item for item in existing_data}
-            except Exception as e:
-                logger.error(f"Error loading existing embeddings: {e}")
         
-        # Load metadata if it exists
-        metadata_file = EMBEDDINGS_FILE.replace(".json", "_metadata.json")
-        if os.path.exists(metadata_file):
+        # Try to load from GCS first
+        client = get_gcs_client()
+        if client:
             try:
-                with open(metadata_file, "r", encoding="utf-8") as f:
-                    existing_metadata = json.load(f)
+                bucket = client.bucket(GCS_BUCKET_NAME)
+                blob = bucket.blob(EMBEDDINGS_FILE_NAME)
+                if blob.exists():
+                    content = blob.download_as_text()
+                    existing_data = json.loads(content)
+                    existing_embeddings = {item["file_path"]: item for item in existing_data}
+                    
+                # Load metadata if it exists
+                metadata_blob = bucket.blob(EMBEDDINGS_FILE_NAME.replace(".json", "_metadata.json"))
+                if metadata_blob.exists():
+                    metadata_content = metadata_blob.download_as_text()
+                    existing_metadata = json.loads(metadata_content)
             except Exception as e:
-                logger.error(f"Error loading metadata: {e}")
+                logger.error(f"Error loading existing embeddings from GCS: {e}")
+        else:
+            # Fallback to local files
+            if os.path.exists(EMBEDDINGS_FILE):
+                try:
+                    with open(EMBEDDINGS_FILE, "r", encoding="utf-8") as f:
+                        existing_data = json.load(f)
+                        existing_embeddings = {item["file_path"]: item for item in existing_data}
+                except Exception as e:
+                    logger.error(f"Error loading existing embeddings from local file: {e}")
+            
+            # Load metadata if it exists
+            metadata_file = EMBEDDINGS_FILE.replace(".json", "_metadata.json")
+            if os.path.exists(metadata_file):
+                try:
+                    with open(metadata_file, "r", encoding="utf-8") as f:
+                        existing_metadata = json.load(f)
+                except Exception as e:
+                    logger.error(f"Error loading metadata from local file: {e}")
         
         # Process files incrementally
         embeddings_data = []
@@ -369,13 +568,37 @@ async def update_knowledge_base_from_github() -> Dict:
                 continue
         
         # Save embeddings
-        os.makedirs(os.path.dirname(EMBEDDINGS_FILE), exist_ok=True)
-        with open(EMBEDDINGS_FILE, "w", encoding="utf-8") as f:
-            json.dump(embeddings_data, f, ensure_ascii=False, indent=2)
-        
-        # Save metadata
-        with open(metadata_file, "w", encoding="utf-8") as f:
-            json.dump(existing_metadata, f, ensure_ascii=False, indent=2)
+        if client:
+            # Save to GCS
+            try:
+                bucket = client.bucket(GCS_BUCKET_NAME)
+                
+                # Save embeddings
+                blob = bucket.blob(EMBEDDINGS_FILE_NAME)
+                content = json.dumps(embeddings_data, ensure_ascii=False, indent=2)
+                blob.upload_from_string(content, content_type="application/json")
+                
+                # Save metadata
+                metadata_blob = bucket.blob(EMBEDDINGS_FILE_NAME.replace(".json", "_metadata.json"))
+                metadata_content = json.dumps(existing_metadata, ensure_ascii=False, indent=2)
+                metadata_blob.upload_from_string(metadata_content, content_type="application/json")
+                
+                logger.info(f"Knowledge base saved to GCS")
+            except Exception as e:
+                logger.error(f"Error saving to GCS: {e}")
+                # Fallback to local save
+                save_knowledge_base_to_local(embeddings_data)
+                # Save metadata locally
+                metadata_file = EMBEDDINGS_FILE.replace(".json", "_metadata.json")
+                with open(metadata_file, "w", encoding="utf-8") as f:
+                    json.dump(existing_metadata, f, ensure_ascii=False, indent=2)
+        else:
+            # Save to local file
+            save_knowledge_base_to_local(embeddings_data)
+            # Save metadata locally
+            metadata_file = EMBEDDINGS_FILE.replace(".json", "_metadata.json")
+            with open(metadata_file, "w", encoding="utf-8") as f:
+                json.dump(existing_metadata, f, ensure_ascii=False, indent=2)
         
         # Reload knowledge base
         load_knowledge_base()
@@ -488,4 +711,6 @@ def get_notes_count() -> Dict[str, int]:
 
 # --- Main Execution ---
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import os
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)

@@ -1,12 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('Script loaded');
     const searchInput = document.getElementById('search-input');
     const searchButton = document.getElementById('search-button');
     const resultsDiv = document.getElementById('results');
-    const notesCountDiv = document.getElementById('notes-count'); // New element
+    const notesCountDiv = document.getElementById('notes-count');
 
     // Function to fetch and display notes count
     async function fetchNotesCount() {
         try {
+            console.log('Fetching notes count from backend');
             const response = await fetch('http://localhost:8000/notes-count');
             const data = await response.json();
             if (data.count !== undefined) {
@@ -26,13 +28,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Функция для выполнения поиска
     async function performSearch(query) {
         if (!query.trim()) {
-            resultsDiv.innerHTML = '<div class="error">Пожалуйста, введите запрос для поиска.</div>';
+            resultsDiv.innerHTML = '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">Пожалуйста, введите запрос для поиска.</div>';
             return;
         }
 
         // Показываем индикатор загрузки
-        resultsDiv.innerHTML = '<div class="loading">Идет поиск...</div>';
-        resultsDiv.className = 'loading';
+        resultsDiv.innerHTML = '<div class="text-center text-gray-600">Идет поиск...</div>';
 
         try {
             // Выполняем запрос к бэкенду
@@ -41,29 +42,50 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Отображаем результаты
             if (data.error) {
-                resultsDiv.innerHTML = `<div class="error">Ошибка: ${data.error}</div>`;
-            } else if (data.relevant_documents && data.relevant_documents.length > 0) {
+                resultsDiv.innerHTML = `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">Ошибка: ${data.error}</div>`;
+            } else if (data.answer) {
                 // Display the AI-generated answer
-                let htmlContent = `<h2>Ответ:</h2><p>${data.answer}</p>`;
+                let htmlContent = `
+                    <div class="mb-6">
+                        <h2 class="text-xl font-bold text-gray-800 mb-3">Ответ:</h2>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <p class="text-gray-700">${data.answer}</p>
+                        </div>
+                    </div>
+                `;
                 
-                // Display relevant documents
-                htmlContent += '<h3>Найденные заметки:</h3><ul>';
-                data.relevant_documents.forEach(doc => {
-                    // Extract filename from file_path for display
-                    const fileName = doc.file_path.split('/').pop().replace('.md', '');
-                    htmlContent += `<li><a href="#" target="_blank">${fileName}</a> (Релевантность: ${(doc.similarity * 100).toFixed(2)}%)</li>`;
-                });
-                htmlContent += '</ul>';
+                // Display relevant documents if they exist
+                if (data.relevant_documents && data.relevant_documents.length > 0) {
+                    htmlContent += `
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-3">Найденные заметки:</h3>
+                            <ul class="space-y-2">
+                    `;
+                    
+                    data.relevant_documents.forEach(doc => {
+                        // Extract filename from file_path for display
+                        const fileName = doc.file_path.split('/').pop().replace('.md', '');
+                        htmlContent += `
+                            <li class="flex justify-between items-center bg-gray-50 p-3 rounded hover:bg-gray-100">
+                                <span class="font-medium text-gray-700">${fileName}</span>
+                                <span class="text-sm text-gray-500">Релевантность: ${(doc.similarity * 100).toFixed(2)}%</span>
+                            </li>
+                        `;
+                    });
+                    
+                    htmlContent += `
+                            </ul>
+                        </div>
+                    `;
+                }
                 
-                resultsDiv.innerHTML = `<div class="success">${htmlContent}</div>`;
+                resultsDiv.innerHTML = htmlContent;
             } else {
-                resultsDiv.innerHTML = '<div class="info">По вашему запросу заметки не найдены.</div>';
+                resultsDiv.innerHTML = '<div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded mb-4">По вашему запросу заметки не найдены.</div>';
             }
         } catch (error) {
-            resultsDiv.innerHTML = `<div class="error">Ошибка при выполнении поиска: ${error.message}</div>`;
+            resultsDiv.innerHTML = `<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">Ошибка при выполнении поиска: ${error.message}</div>`;
         }
-
-        resultsDiv.className = '';
     }
 
     // Обработчик клика по кнопке поиска

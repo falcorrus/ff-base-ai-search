@@ -13,7 +13,7 @@
 * **Бэкенд:** Python 3.9+, FastAPI
 * **ИИ:** Google Gemini API (для генерации embeddings и ответов)
 * **Хранилище данных:** Локальное JSON хранилище (для embeddings)
-* **Фронтенд:** Vanilla JavaScript (в процессе разработки)
+* **Фронтенд:** Vanilla JavaScript
 * **Деплой:** Google Cloud Run (бэкенд), Firebase Hosting (фронтенд)
 
 ## Архитектура
@@ -36,14 +36,18 @@ ff-base-ai-search/
 │   ├── main.py             # Основной файл приложения
 │   ├── requirements.txt    # Зависимости Python
 │   ├── init_knowledge_base.py # Скрипт для инициализации базы знаний из FF-BASE
-│   └── .env                # Переменные окружения
-├── frontend/               # Фронтенд приложение (в разработке)
+│   ├── start.sh            # Скрипт для запуска сервера
+│   ├── Dockerfile          # Конфигурация Docker
+│   └── .env.example        # Пример переменных окружения
+├── frontend/               # Фронтенд приложение
 │   ├── index.html          # Главная страница
 │   ├── style.css           # Стили
 │   └── script.js           # JavaScript код
 ├── FF-BASE/                # Локальное хранилище Markdown заметок (276 файлов)
 ├── knowledge_base/         # Локальное хранилище embeddings
-│   └── embeddings.json     # Векторные представления заметок (276 записей)
+│   ├── embeddings.json     # Векторные представления заметок (276 записей)
+│   ├── search_log.json     # Лог поисковых запросов
+│   └── embeddings_metadata.json # Метаданные для отслеживания изменений файлов
 └── DOCUMENTATION.md        # Документация проекта
 ```
 
@@ -58,14 +62,16 @@ ff-base-ai-search/
 
 2. Создайте файл `.env` с необходимыми переменными окружения:
    ```bash
-   GOOGLE_API_KEY=ваш_google_gemini_api_key
-   LOG_LEVEL=INFO
+   cp backend/.env.example .env
+   # Отредактируйте .env, добавив ваш GOOGLE_API_KEY
    ```
 
 3. Запустите сервер:
    ```bash
    cd backend
-   uvicorn main:app --reload --port 8000
+   ./start.sh
+   # Или альтернативно:
+   # uvicorn main:app --reload --port 8000
    ```
 
 ### Фронтенд
@@ -83,12 +89,53 @@ ff-base-ai-search/
   * `query` (обязательный) - текст поискового запроса (поддерживает русский язык)
   * `top_k` (опциональный) - количество возвращаемых результатов (по умолчанию 5)
 * `GET /notes-count` - Получение количества заметок в базе знаний
-* `GET /update-knowledge-base-local` - Обновление базы знаний из локальной директории
+* `GET /update-knowledge-base-local` - Обновление базы знаний из локальной директории FF-BASE
+* `GET /update-knowledge-base` - Обновление базы знаний из GitHub репозитория (требует GITHUB_PAT)
+
+## Синхронизация базы знаний
+
+Для удобной синхронизации между локальной базой знаний и Google Cloud Storage создан специальный скрипт:
+
+### Быстрая синхронизация
+```bash
+./sync.sh
+```
+
+Этот скрипт выполняет полный цикл синхронизации:
+1. Обновляет локальные эмбеддинги из директории `FF-BASE`
+2. Синхронизирует обновленные эмбеддинги с Google Cloud Storage
+
+### Расширенные команды синхронизации
+
+```bash
+# Обновить только локальные эмбеддинги
+python sync_embeddings.py update-local
+
+# Синхронизировать локальные эмбеддинги с GCS
+python sync_embeddings.py sync-to-gcs
+
+# Синхронизировать эмбеддинги из GCS в локальную директорию
+python sync_embeddings.py sync-from-gcs
+
+# Полная синхронизация (обновление + синхронизация в GCS)
+python sync_embeddings.py full-sync
+```
+
+### Как это работает
+
+1. **Локальная разработка**: Скрипт читает все Markdown заметки из директории `FF-BASE` и создает/обновляет эмбеддинги
+2. **Инкрементальное обновление**: Скрипт отслеживает изменения в файлах и обновляет только измененные/новые заметки
+3. **Синхронизация с облаком**: Обновленные эмбеддинги загружаются в Google Cloud Storage bucket
+4. **Деплой**: При запуске в Google Cloud Run приложение загружает эмбеддинги из GCS
 
 ## Деплой
 
 * **Бэкенд:** Google Cloud Run
 * **Фронтенд:** Firebase Hosting
+
+Подробная информация о деплое фронтенда доступна в файле [DEPLOY_FRONTEND.md](DEPLOY_FRONTEND.md)
+
+Подробная информация о деплое бэкенда доступна в файле [backend/DEPLOY_INSTRUCTIONS.md](backend/DEPLOY_INSTRUCTIONS.md)
 
 ## Документация
 

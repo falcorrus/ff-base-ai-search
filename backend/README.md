@@ -17,6 +17,9 @@ backend/
 ├── main.py                 # Main application file
 ├── requirements.txt        # Python dependencies
 ├── .env.example           # Example environment variables
+├── start.sh               # Script to start the server
+├── init_knowledge_base.py # Script to initialize knowledge base from FF-BASE
+├── Dockerfile             # Docker configuration
 └── README.md              # This file
 ```
 
@@ -26,10 +29,13 @@ backend/
 - `GET /` - Health check endpoint
 
 ### Knowledge Base Management
-- `GET /update-knowledge-base` - Update embeddings from local FF-BASE directory
+- `GET /update-knowledge-base-local` - Update embeddings from local FF-BASE directory
+- `GET /update-knowledge-base` - Update embeddings from GitHub repository (requires GITHUB_PAT)
 
 ### Search
-- `GET /search?query={query}` - Search for relevant notes and generate answers
+- `GET /search?query={query}&top_k={count}` - Search for relevant notes and generate answers
+  - `query` (required) - Search query text
+  - `top_k` (optional) - Number of results to return (default: 5)
 - `GET /notes-count` - Get the total number of notes in the knowledge base
 
 ## Environment Variables
@@ -61,6 +67,10 @@ See `.env.example` for a template.
 To run the backend server:
 
 ```bash
+# Using the start script (recommended)
+./start.sh
+
+# Or directly with uvicorn
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 

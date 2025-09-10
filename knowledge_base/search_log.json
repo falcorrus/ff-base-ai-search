@@ -1,150 +1,74 @@
 [
   {
-    "timestamp": "2025-09-08 14:30:08",
-    "query": "безопасность"
+    "query": "подробные описания",
+    "timestamp": "2025-09-09T15:20:02.170486"
   },
   {
-    "timestamp": "2025-09-08 17:10:46",
-    "query": "analytics"
+    "query": "подробные разборы analytics",
+    "timestamp": "2025-09-09T18:47:51.892547"
   },
   {
-    "timestamp": "2025-09-08 17:16:40",
-    "query": "analytics"
+    "query": "подробные разборы analytics",
+    "timestamp": "2025-09-09T18:47:59.689900"
   },
   {
-    "timestamp": "2025-09-08 17:17:06",
-    "query": "analytics"
+    "query": "безопасность",
+    "timestamp": "2025-09-09T19:30:08.291112"
   },
   {
-    "timestamp": "2025-09-08 17:21:03",
-    "query": "безопасность"
+    "query": "подробные",
+    "timestamp": "2025-09-09T19:30:21.151168"
   },
   {
-    "timestamp": "2025-09-08 18:09:57",
-    "query": "безопасность"
+    "query": "безопасность",
+    "timestamp": "2025-09-10T10:10:27.348225"
   },
   {
-    "timestamp": "2025-09-08 18:09:59",
-    "query": "безопасность"
+    "query": "безопасность",
+    "timestamp": "2025-09-10T11:07:58.832864"
   },
   {
-    "timestamp": "2025-09-08 18:10:06",
-    "query": "analytics"
+    "query": "What is the meaning of life?",
+    "timestamp": "2025-09-10T11:12:53.487065"
   },
   {
-    "timestamp": "2025-09-08 18:10:27",
-    "query": "analytics"
+    "query": "безопасность",
+    "timestamp": "2025-09-10T11:33:08.502949"
   },
   {
-    "timestamp": "2025-09-08 21:30:46",
-    "query": "analytics"
+    "query": "What is the meaning of life?",
+    "timestamp": "2025-09-10T11:34:10.696832"
   },
   {
-    "timestamp": "2025-09-08 21:34:20",
-    "query": "analytics"
+    "query": "безопасность",
+    "timestamp": "2025-09-10T11:37:31.758284"
   },
   {
-    "timestamp": "2025-09-08 21:34:43",
-    "query": "Supabase"
+    "query": "безопасность",
+    "timestamp": "2025-09-10T12:14:22.797147"
   },
   {
-    "timestamp": "2025-09-08 21:35:04",
-    "query": "Supabase"
+    "query": "кому надо Антиспам бот",
+    "timestamp": "2025-09-10T12:14:32.269251"
   },
   {
-    "timestamp": "2025-09-08 22:38:40",
-    "query": "analytics"
+    "query": "настройка авторизации",
+    "timestamp": "2025-09-10T12:14:50.896650"
   },
   {
-    "timestamp": "2025-09-08 22:42:41",
-    "query": "test"
+    "query": "подробно",
+    "timestamp": "2025-09-10T12:52:43.557627"
   },
   {
-    "timestamp": "2025-09-08 22:42:41",
-    "query": "test"
+    "query": "подробно",
+    "timestamp": "2025-09-10T12:55:44.389539"
   },
   {
-    "timestamp": "2025-09-08 22:42:41",
-    "query": "test"
+    "query": "Создаём виджеты ",
+    "timestamp": "2025-09-10T12:56:03.070846"
   },
   {
-    "timestamp": "2025-09-08 22:43:12",
-    "query": "analytics"
-  },
-  {
-    "timestamp": "2025-09-08 22:43:18",
-    "query": "test"
-  },
-  {
-    "timestamp": "2025-09-08 22:43:18",
-    "query": "test"
-  },
-  {
-    "timestamp": "2025-09-08 22:43:18",
-    "query": "test"
-  },
-  {
-    "timestamp": "2025-09-08 22:43:32",
-    "query": "test"
-  },
-  {
-    "timestamp": "2025-09-08 22:43:32",
-    "query": "test"
-  },
-  {
-    "timestamp": "2025-09-08 22:43:32",
-    "query": "test"
-  },
-  {
-    "timestamp": "2025-09-08 22:45:18",
-    "query": "приложение"
-  },
-  {
-    "timestamp": "2025-09-08 22:45:33",
-    "query": "приложение"
-  },
-  {
-    "timestamp": "2025-09-08 22:46:15",
-    "query": "приложение"
-  },
-  {
-    "timestamp": "2025-09-09 09:13:18",
-    "query": "приложение"
-  },
-  {
-    "timestamp": "2025-09-09 09:13:22",
-    "query": "приложение"
-  },
-  {
-    "timestamp": "2025-09-09 09:13:34",
-    "query": "flutterfflow"
-  },
-  {
-    "timestamp": "2025-09-09 09:16:45",
-    "query": "analytics"
-  },
-  {
-    "timestamp": "2025-09-09 09:17:32",
-    "query": "flutterflow"
-  },
-  {
-    "timestamp": "2025-09-09 09:19:27",
-    "query": "analytics"
-  },
-  {
-    "timestamp": "2025-09-09 09:21:28",
-    "query": "analytics"
-  },
-  {
-    "timestamp": "2025-09-09 09:50:55",
-    "query": "test"
-  },
-  {
-    "timestamp": "2025-09-09 09:50:55",
-    "query": "test"
-  },
-  {
-    "timestamp": "2025-09-09 09:50:55",
-    "query": "test"
+    "query": "Создаём виджеты ",
+    "timestamp": "2025-09-10T13:07:32.924391"
   }
 ]
