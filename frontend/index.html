@@ -5,17 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Интеллектуальный поиск по заметкам</title>
     <link rel="stylesheet" href="dist/output.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="bg-gray-100">
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
     <div class="container mx-auto px-4 py-8 max-w-4xl">
-        <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">Интеллектуальный поиск по заметкам</h1>
-        <div id="notes-count" class="text-center text-gray-600 mb-6"></div>
-        <div class="search-container flex mb-8">
-            <input type="text" id="search-input" placeholder="Введите ваш запрос..." class="flex-grow px-4 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-            <button id="search-button" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-r-lg transition-colors">Искать</button>
+        <!-- Header with improved design -->
+        <header class="text-center mb-12 mt-6">
+            <div class="flex justify-center mb-4">
+                <div class="bg-gradient-to-r from-blue-500 to-purple-600 p-3 rounded-full shadow-lg">
+                    <i class="fas fa-brain text-white text-2xl"></i>
+                </div>
+            </div>
+            <h1 class="text-4xl font-bold text-gray-800 mb-3">Интеллектуальный поиск по заметкам</h1>
+            <p class="text-gray-600 max-w-2xl mx-auto">
+                <a href="https://www.ff-base.ru/" target="_blank" class="font-bold text-blue-600 hover:text-blue-800 hover:underline">
+                    FF-BASE.RU
+                </a>
+            </p>
+        </header>
+
+        
+
+        <!-- Search section with enhanced design -->
+        <div class="bg-white rounded-2xl p-1 shadow-lg mb-2">
+            <div class="flex items-center">
+                <input 
+                    type="text" 
+                    id="search-input" 
+                    placeholder="Например: Как настроить синхронизацию Google Drive?" 
+                    class="flex-grow bg-transparent border-none focus:ring-0 text-gray-700 placeholder-gray-400 text-base px-6 py-4 rounded-l-2xl"
+                >
+                <button 
+                    id="search-button" 
+                    class="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white rounded-r-2xl flex items-center justify-center px-4 py-4 font-medium transition-all duration-300 transform hover:scale-105"
+                >
+                    <i class="fas fa-search mr-2"></i>
+                    <span class="font-medium">Искать</span>
+                </button>
+            </div>
         </div>
-        <div id="results" class="bg-white rounded-lg shadow-md p-6"></div>
+        <div class="mt-4 flex items-start text-gray-600 text-sm px-4">
+            <i class="fas fa-lightbulb text-base mr-2 mt-px"></i>
+            <p>Попробуйте: "Как использовать API Google Drive" или "Настройка Cloud Functions"</p>
+        </div>
+
+        <!-- Results section -->
+        <div id="results" class="space-y-6"></div>
     </div>
+
+    <!-- Footer -->
+    <footer class="text-center py-6 text-gray-600 text-sm">
+        <p>© 2025 Интеллектуальный поиск по заметкам. Используется технология Google Gemini.</p>
+    </footer>
+
     <script src="script.js"></script>
 </body>
 </html>

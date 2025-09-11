@@ -57,6 +57,32 @@
 - Card (`@/components/ui/card`)
 - Input (`@/components/ui/input`)
 
+## Running the Development Environment
+
+To run the complete development environment with both frontend and backend:
+
+1. Make sure both scripts are executable:
+   ```bash
+   chmod +x ../scripts/start-dev.sh
+   chmod +x ../scripts/stop-dev.sh
+   chmod +x rebuild-css.sh
+   ```
+
+2. Start the development environment:
+   ```bash
+   ../scripts/start-dev.sh
+   ```
+
+3. Access the applications:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:8000
+   - Backend docs: http://localhost:8000/docs
+
+4. To stop the development environment:
+   ```bash
+   ../scripts/stop-dev.sh
+   ```
+
 ## Next Steps
 
 1. You can start using the components in your React components
