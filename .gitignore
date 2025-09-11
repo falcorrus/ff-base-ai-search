@@ -11,7 +11,6 @@ yarn-debug.log*
 yarn-error.log*
 
 sync_logs.md
-backend/service-account-key.json
 
 # System files
 .DS_Store
@@ -19,6 +18,7 @@ backend/service-account-key.json
 # Environment variables
 .env
 .env2
+.env 2
 .env.local
 .env.development.local
 .env.test.local
@@ -32,12 +32,6 @@ __pycache__/
 # Project specific logs
 knowledge_base/search_log.json
 knowledge_base/embeddings_copy.json
-.env
-backend/service-account-key.json
-
-# Environment files
-.env
-.env 2
 
 # Service account keys
 backend/service-account-key.json
