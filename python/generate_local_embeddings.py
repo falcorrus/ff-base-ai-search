@@ -5,7 +5,17 @@ from dotenv import load_dotenv
 import google.generativeai as genai
 
 # Загрузка переменных окружения из .env файла
-load_dotenv()
+# Load from root .env file first
+env_file = Path("../.env")
+if env_file.exists():
+    load_dotenv(env_file)
+    print("Environment variables loaded from root .env")
+else:
+    # Fallback to backend/.env
+    backend_env_file = Path("../backend/.env")
+    if backend_env_file.exists():
+        load_dotenv(backend_env_file)
+        print("Environment variables loaded from backend/.env")
 
 # Получение токенов и параметров из переменных окружения
 GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -116,7 +126,7 @@ def create_embeddings_for_local_files(source_dir, output_file):
     return len(embeddings_data)
 
 if __name__ == "__main__":
-    source_directory = "FF-BASE"
+    source_directory = os.getenv("FF_BASE_DIR", "/Users/eugene/Library/CloudStorage/GoogleDrive-ekirshin@gmail.com/Мой диск/OBSIDIAN/FF-BASE")
     output_file = "knowledge_base/embeddings.json"
     
     print("Starting embeddings generation for local files...")

@@ -1,7 +1,10 @@
 #!/bin/bash
-# Sync script for updating embeddings from FF-BASE and syncing to GCS
+# Sync script for updating embeddings from directory specified by `FF_BASE_DIR` environment variable and syncing to GCS
 
-echo "🔄 Updating embeddings from FF-BASE and syncing to GCS..."
+# Change to the project directory
+cd "$(dirname "$0")/.."
+
+echo "🔄 Updating embeddings from directory specified by \`FF_BASE_DIR\` environment variable and syncing to GCS..."
 
 # Set the Google service account key from .env file
 if [ -f "backend/.env" ]; then
@@ -16,7 +19,7 @@ if [ -f "backend/venv/bin/activate" ]; then
 fi
 
 # Run the full sync
-python sync_embeddings.py full-sync
+python python/sync_embeddings.py full-sync
 
 if [ $? -eq 0 ]; then
     echo "✅ Knowledge base sync completed successfully!"

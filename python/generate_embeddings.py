@@ -5,7 +5,17 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 
 # Загрузка переменных окружения из .env файла
-load_dotenv()
+# Load from root .env file first
+env_file = Path("../.env")
+if env_file.exists():
+    load_dotenv(env_file)
+    print("Environment variables loaded from root .env")
+else:
+    # Fallback to backend/.env
+    backend_env_file = Path("../backend/.env")
+    if backend_env_file.exists():
+        load_dotenv(backend_env_file)
+        print("Environment variables loaded from backend/.env")
 
 # Получение API ключа из переменных окружения
 GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
@@ -76,7 +86,7 @@ def create_embeddings_for_directory(source_dir, output_file):
         if embedding is None:
             continue
             
-        # Относительный путь от корня FF-BASE
+        # Относительный путь от корня директории, указанной в переменной окружения `FF_BASE_DIR`
         relative_path = os.path.relpath(file_path, source_dir)
         
         # Добавляем в данные
@@ -99,7 +109,7 @@ def create_embeddings_for_directory(source_dir, output_file):
     return len(embeddings_data)
 
 if __name__ == "__main__":
-    source_directory = "/Users/eugene/MyProjects/ff-base-ai-search/FF-BASE"
+    source_directory = os.getenv("FF_BASE_DIR", "/Users/eugene/Library/CloudStorage/GoogleDrive-ekirshin@gmail.com/Мой диск/OBSIDIAN/FF-BASE")
     output_file = "/Users/eugene/MyProjects/ff-base-ai-search/knowledge_base/embeddings.json"
     
     try:

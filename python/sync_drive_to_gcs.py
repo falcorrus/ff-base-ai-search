@@ -19,10 +19,17 @@ from dotenv import load_dotenv
 
 def load_environment():
     """Load environment variables from .env file."""
-    env_file = Path("backend/.env")
+    # Load from root .env file first
+    env_file = Path(".env")
     if env_file.exists():
         load_dotenv(env_file)
-        print("Environment variables loaded")
+        print("Environment variables loaded from root .env")
+    else:
+        # Fallback to backend/.env
+        backend_env_file = Path("backend/.env")
+        if backend_env_file.exists():
+            load_dotenv(backend_env_file)
+            print("Environment variables loaded from backend/.env")
 
 def get_drive_service():
     """Initialize and return Google Drive service."""
@@ -74,7 +81,7 @@ def get_gcs_client():
         return None
 
 def find_ff_base_folder(service):
-    """Find the FF-BASE folder in Google Drive."""
+    """Find the FF-BASE folder in Google Drive (located at directory specified by `FF_BASE_DIR` environment variable)."""
     try:
         # Search for the folder by name
         query = "name='FF-BASE' and mimeType='application/vnd.google-apps.folder'"
@@ -85,7 +92,7 @@ def find_ff_base_folder(service):
         
         items = results.get('files', [])
         if not items:
-            print("FF-BASE folder not found in Google Drive")
+            print("FF-BASE folder not found in Google Drive (expected at directory specified by `FF_BASE_DIR` environment variable)")
             return None
             
         folder = items[0]
@@ -153,7 +160,7 @@ def list_drive_files(service, folder_id):
         # Start recursive listing
         list_files_recursive(folder_id)
         
-        print(f"Found {len(all_files)} Markdown files in FF-BASE folder (including subfolders)")
+        print(f"Found {len(all_files)} Markdown files in FF-BASE folder (located at directory specified by `FF_BASE_DIR` environment variable) (including subfolders)")
         return all_files
         
     except Exception as e:
@@ -181,7 +188,7 @@ def download_drive_file(service, file_id):
         return None
 
 def sync_drive_to_gcs():
-    """Sync notes from Google Drive FF-BASE folder to GCS bucket.
+    """Sync notes from Google Drive FF-BASE folder (located at directory specified by `FF_BASE_DIR` environment variable) to GCS bucket.
     Only syncs files that have changed since last sync.
     """
     try:
@@ -203,7 +210,7 @@ def sync_drive_to_gcs():
         
         print(f"Syncing notes from Google Drive to GCS bucket: {gcs_bucket_name}")
         
-        # Find FF-BASE folder
+        # Find FF-BASE folder (located at directory specified by `FF_BASE_DIR` environment variable)
         folder_id = find_ff_base_folder(drive_service)
         if not folder_id:
             return False

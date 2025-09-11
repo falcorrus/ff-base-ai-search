@@ -10,6 +10,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+sync_logs.md
+backend/service-account-key.json
+
 # System files
 .DS_Store
 
@@ -28,3 +31,5 @@ __pycache__/
 # Project specific logs
 knowledge_base/search_log.json
 knowledge_base/embeddings_copy.json
+.env
+backend/service-account-key.json

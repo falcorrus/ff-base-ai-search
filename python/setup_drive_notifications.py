@@ -16,10 +16,17 @@ from datetime import datetime, timedelta
 
 def load_environment():
     """Load environment variables from .env file."""
-    env_file = Path("backend/.env")
+    # Load from root .env file first
+    env_file = Path(".env")
     if env_file.exists():
         load_dotenv(env_file)
-        print("Environment variables loaded")
+        print("Environment variables loaded from root .env")
+    else:
+        # Fallback to backend/.env
+        backend_env_file = Path("backend/.env")
+        if backend_env_file.exists():
+            load_dotenv(backend_env_file)
+            print("Environment variables loaded from backend/.env")
 
 def get_drive_service():
     """Initialize and return Google Drive service."""
@@ -50,7 +57,7 @@ def get_drive_service():
         return None
 
 def find_ff_base_folder(service):
-    """Find the FF-BASE folder in Google Drive."""
+    """Find the FF-BASE folder in Google Drive (located at directory specified by `FF_BASE_DIR` environment variable)."""
     try:
         # Search for the folder by name
         query = "name='FF-BASE' and mimeType='application/vnd.google-apps.folder'"
@@ -61,7 +68,7 @@ def find_ff_base_folder(service):
         
         items = results.get('files', [])
         if not items:
-            print("FF-BASE folder not found in Google Drive")
+            print("FF-BASE folder not found in Google Drive (expected at directory specified by `FF_BASE_DIR` environment variable)")
             return None
             
         folder = items[0]
@@ -113,7 +120,7 @@ def setup_drive_notifications():
         if not drive_service:
             return False
             
-        # Find FF-BASE folder
+        # Find FF-BASE folder (located at directory specified by `FF_BASE_DIR` environment variable)
         folder_id = find_ff_base_folder(drive_service)
         if not folder_id:
             return False

@@ -4,12 +4,7 @@
 
 
 
-  Если ты хочешь обновить базу знаний из GitHub репозитория, можешь выполнить
-  запрос:
-
-   1 curl http://localhost:8000/update-knowledge-base
-
-  Если ты хочешь обновить базу знаний из локальной директории FF-BASE, можешь
+  Если ты хочешь обновить базу знаний из локальной директории, указанной в переменной окружения `FF_BASE_DIR` (по умолчанию `/Users/eugene/Library/CloudStorage/GoogleDrive-ekirshin@gmail.com/Мой диск/OBSIDIAN/FF-BASE`), можешь
   выполнить запрос:
 
    1 curl http://localhost:8000/update-knowledge-base-local

@@ -18,7 +18,7 @@ backend/
 ├── requirements.txt        # Python dependencies
 ├── .env.example           # Example environment variables
 ├── start.sh               # Script to start the server
-├── init_knowledge_base.py # Script to initialize knowledge base from FF-BASE
+├── init_knowledge_base.py # Script to initialize knowledge base from directory specified by `FF_BASE_DIR` environment variable (default `/Users/eugene/Library/CloudStorage/GoogleDrive-ekirshin@gmail.com/Мой диск/OBSIDIAN/FF-BASE`)
 ├── Dockerfile             # Docker configuration
 └── README.md              # This file
 ```
@@ -29,8 +29,7 @@ backend/
 - `GET /` - Health check endpoint
 
 ### Knowledge Base Management
-- `GET /update-knowledge-base-local` - Update embeddings from local FF-BASE directory
-- `GET /update-knowledge-base` - Update embeddings from GitHub repository (requires GITHUB_PAT)
+- `GET /update-knowledge-base-local` - Update embeddings from local directory specified by `FF_BASE_DIR` environment variable (default `/Users/eugene/Library/CloudStorage/GoogleDrive-ekirshin@gmail.com/Мой диск/OBSIDIAN/FF-BASE`)
 
 ### Search
 - `GET /search?query={query}&top_k={count}` - Search for relevant notes and generate answers
@@ -40,14 +39,15 @@ backend/
 
 ## Environment Variables
 
-Create a `.env` file in the backend directory with the following variables:
+This application is configured via environment variables. For local development, you should create a `.env` file in the **root project directory** (one level above this `backend` directory).
 
-```
-GOOGLE_API_KEY=your_google_api_key_here
-LOG_LEVEL=INFO
+To do this, you can go to the root directory and copy the example file:
+```bash
+# In the project root
+cp .env.example .env
 ```
 
-See `.env.example` for a template.
+Then edit the `.env` file to set your `GOOGLE_API_KEY`. The application will automatically find and load this file on startup.
 
 ## Installation
 
@@ -56,11 +56,7 @@ See `.env.example` for a template.
    pip install -r requirements.txt
    ```
 
-2. Create a `.env` file with your Google API key:
-   ```bash
-   cp .env.example .env
-   # Edit .env to add your GOOGLE_API_KEY
-   ```
+2. Ensure you have created a `.env` file in the project root directory as described in the "Environment Variables" section.
 
 ## Running the Application
 

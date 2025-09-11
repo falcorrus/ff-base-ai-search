@@ -1,0 +1,66 @@
+# .gcloudignore
+# Specifies files to ignore when deploying to Google Cloud Functions
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore log files
+*.log
+logs/
+
+# Ignore temporary files
+tmp/
+temp/
+*.tmp
+
+# Ignore Python cache files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+.coverage
+.coveragerc
+.cache
+.pytest_cache/
+nosetests.xml
+coverage.xml
+
+# Ignore virtual environments
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# Ignore node_modules (if any)
+node_modules/
+
+# Ignore git files
+.git/
+.gitignore
+.gitattributes
+
+# Ignore documentation
+docs/
+*.md
+
+# Ignore test files (but keep test_main.py for the function)
+test_*.py
+tests/
+
+# Ignore deployment scripts
+deploy.sh
+setup_scheduler.sh
+init_project.sh
+
+# Ignore README
+README.md

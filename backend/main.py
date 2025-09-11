@@ -676,16 +676,17 @@ def search(
         context = "\n\n---\n\n".join(context_parts)
         
         # Create prompt for answer generation
-        prompt = f"""You are an AI assistant that answers questions based on provided context from personal notes.
-Use the following documents to answer the question at the end.
-If you don't know the answer, just say that you don't know, don't try to make up an answer.
+        prompt = f"""Вы — AI-ассистент, который отвечает на вопросы на основе предоставленного контекста из личных заметок.
+Используйте следующие документы, чтобы ответить на вопрос в конце.
+Если вы не знаете ответа, просто скажите, что не знаете, не пытайтесь придумать ответ.
+ВАЖНО: Отвечайте ТОЛЬКО на русском языке. Даже если вопрос на другом языке, переведите его и ответьте на русском.
 
-Context:
+Контекст:
 {context}
 
-Question: {query}
+Вопрос: {query}
 
-Answer:"""
+Ответ (на русском языке):"""
 
         model = genai.GenerativeModel(GENERATIVE_MODEL)
         response = model.generate_content(prompt)

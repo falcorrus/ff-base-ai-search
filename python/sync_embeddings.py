@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Script to sync embeddings between local FF-BASE and Google Cloud Storage.
+Script to sync embeddings between local directory specified by `FF_BASE_DIR` environment variable and Google Cloud Storage.
 """
 
 import os
@@ -11,17 +11,29 @@ from pathlib import Path
 
 def load_environment():
     """Load environment variables from .env file."""
-    env_file = Path("backend/.env")
+    # Load from root .env file first
+    env_file = Path(".env")
     if env_file.exists():
         with open(env_file) as f:
             for line in f:
                 if line.strip() and not line.startswith("#"):
                     key, value = line.strip().split("=", 1)
                     os.environ[key] = value
+    
+    # Load from backend/.env file as fallback
+    backend_env_file = Path("backend/.env")
+    if backend_env_file.exists():
+        with open(backend_env_file) as f:
+            for line in f:
+                if line.strip() and not line.startswith("#"):
+                    key, value = line.strip().split("=", 1)
+                    # Only set if not already set
+                    if key not in os.environ:
+                        os.environ[key] = value
 
 def update_local_embeddings():
-    """Update local embeddings from FF-BASE directory."""
-    print("Updating local embeddings from FF-BASE directory...")
+    """Update local embeddings from directory specified by `FF_BASE_DIR` environment variable."""
+    print("Updating local embeddings from directory specified by `FF_BASE_DIR` environment variable...")
     try:
         # Change to backend directory and run the update endpoint
         result = subprocess.run([
@@ -137,10 +149,10 @@ def main():
     """Main function."""
     if len(sys.argv) < 2:
         print("Usage:")
-        print("  python sync_embeddings.py update-local    # Update local embeddings from FF-BASE")
-        print("  python sync_embeddings.py sync-to-gcs     # Sync local embeddings to GCS")
-        print("  python sync_embeddings.py sync-from-gcs   # Sync embeddings from GCS to local")
-        print("  python sync_embeddings.py full-sync       # Update local + sync to GCS")
+        print("  python python/sync_embeddings.py update-local    # Update local embeddings from directory specified by `FF_BASE_DIR` environment variable")
+        print("  python python/sync_embeddings.py sync-to-gcs     # Sync local embeddings to GCS")
+        print("  python python/sync_embeddings.py sync-from-gcs   # Sync embeddings from GCS to local")
+        print("  python python/sync_embeddings.py full-sync       # Update local + sync to GCS")
         return
     
     command = sys.argv[1]

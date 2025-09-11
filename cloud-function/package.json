@@ -1,0 +1,15 @@
+{
+  "name": "sync-drive-to-gcs",
+  "version": "1.0.0",
+  "description": "Cloud Function to sync notes from Google Drive to Google Cloud Storage",
+  "main": "main.py",
+  "scripts": {
+    "deploy": "gcloud functions deploy sync-drive-to-gcs --runtime python39 --trigger-http --allow-unauthenticated --entry-point sync_drive_to_gcs --memory 512MB --timeout 540s"
+  },
+  "dependencies": {
+    "google-cloud-storage": "^2.8.0",
+    "google-api-python-client": "^2.70.0",
+    "google-auth": "^2.15.0",
+    "python-dotenv": "^0.19.0"
+  }
+}

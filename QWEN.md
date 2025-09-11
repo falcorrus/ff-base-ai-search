@@ -2,12 +2,12 @@
 - Для запуска проекта ff-base-ai-search:
 1. Активировать виртуальное окружение: source backend/venv/bin/activate
 2. Запустить сервер: cd backend && ./start.sh
-   Или альтернативно: ./run.py
+   Или альтернативно: python python/run.py
 3. Сервер будет доступен по адресу http://localhost:8000
 
 ## Project Overview
 
-This project is a web application designed for intelligent search and comprehensive answer generation from personal Markdown notes stored in the local `FF-BASE` directory or from the `falcorrus/ff-base` GitHub repository. It leverages vector search and large language models (LLMs) to provide quick and accurate answers based on a user's knowledge base.
+This project is a web application designed for intelligent search and comprehensive answer generation from personal Markdown notes stored in the local directory specified by the `FF_BASE_DIR` environment variable (default `/Users/eugene/Library/CloudStorage/GoogleDrive-ekirshin@gmail.com/Мой диск/OBSIDIAN/FF-BASE`). It leverages vector search and large language models (LLMs) to provide quick and accurate answers based on a user's knowledge base.
 
 **Key Technologies:**
 
@@ -23,12 +23,12 @@ The project's knowledge base has been recently restored with a complete set of e
 
 **Architecture Highlights:**
 
-*   **Synchronization:** Reading Markdown notes from the local `FF-BASE` directory or from the `falcorrus/ff-base` GitHub repository.
+*   **Synchronization:** Reading Markdown notes from the local directory specified by the `FF_BASE_DIR` environment variable (default `/Users/eugene/Library/CloudStorage/GoogleDrive-ekirshin@gmail.com/Мой диск/OBSIDIAN/FF-BASE`).
 *   **Embedding Generation:** Creation and storage of vector embeddings for each note using Google Gemini Embeddings API (`models/embedding-001`). Recently regenerated for all 276 notes.
 *   **Search & Answer Generation:**
     *   User queries are transformed into embeddings via the Google Gemini Embeddings API.
     *   Relevant notes are identified through vector similarity search using cosine similarity.
-    *   Markdown files for relevant notes are read from the local filesystem or GitHub.
+    *   Markdown files for relevant notes are read from the local filesystem.
     *   A context is formed from these notes and sent to the Google Gemini LLM (`gemini-1.5-flash`) for comprehensive answer generation.
     *   The generated answer is returned to the user.
 *   **Logging:** All requests are logged to a JSON file for monitoring and debugging.
@@ -70,8 +70,7 @@ chmod +x start.sh
 Endpoints:
 
 *   `GET /` - Health check endpoint
-*   `GET /update-knowledge-base` - Update embeddings from GitHub repository
-*   `GET /update-knowledge-base-local` - Update embeddings from local FF-BASE directory
+*   `GET /update-knowledge-base-local` - Update embeddings from local directory specified by the `FF_BASE_DIR` environment variable (default `/Users/eugene/Library/CloudStorage/GoogleDrive-ekirshin@gmail.com/Мой диск/OBSIDIAN/FF-BASE`)
 *   `GET /search?query={query}` - Search for relevant notes and generate answers
 *   `GET /notes-count` - Get the total number of notes in the knowledge base
 
@@ -96,6 +95,18 @@ python -m http.server 3000
 *   **Logging:** All requests are logged to a JSON file for monitoring and debugging.
 *   **Google Cloud Ecosystem:** The project is designed to integrate seamlessly with Google Cloud services for deployment, security, and scalability.
 *   **LLM Interaction:** Google Gemini API is used for query embedding and answer generation. Direct calls to the Gemini API are preferred for production stability and scalability.
-*   **GitHub API:** Used for reading Markdown notes from the `falcorrus/ff-base` GitHub repository.
-*   **Local File System:** Used for reading Markdown notes from the local `FF-BASE` directory.
+
+*   **Local File System:** Used for reading Markdown notes from the local directory specified by the `FF_BASE_DIR` environment variable (default `/Users/eugene/Library/CloudStorage/GoogleDrive-ekirshin@gmail.com/Мой диск/OBSIDIAN/FF-BASE`).
 *   **Scalability:** Initial local JSON storage for embeddings, with a plan to migrate to a specialized vector store (e.g., Chromadb) as the note base grows.
+
+## Documentation Workflow
+
+Чтобы документация была консистентной и легкой в поддержке, пожалуйста, следуйте этим правилам:
+
+1.  **Основной хаб документации:** Вся статичная документация по проекту (руководства, инструкции, справочники) находится в директории `/docs`.
+2.  **Чтение документации:** Когда вас спрашивают о функциях проекта, настройке или архитектуре, в первую очередь ищите информацию в директории `/docs`.
+3.  **Обновление статичной документации:** Любые изменения или дополнения в статичную документацию (например, инструкции по деплою, справочник по API) должны вноситься в файлы внутри директории `/docs`.
+4.  **Динамические файлы контекста:** Файлы `GEMINI.md` и `QWEN.md` являются особенными. Они находятся в корневой директории и обновляются динамически внешними процессами.
+    *   **Не перемещайте, не переименовывайте и не удаляйте `GEMINI.md` или `QWEN.md`**.
+    *   Обновления, касающиеся общего обзора проекта или "памяти" AI-ассистента, должны записываться непосредственно в эти файлы в корневой директории.
+5.  **Главный README:** Файл `README.md` в корне является кратким обзором. Не добавляйте в него подробную документацию. Он должен содержать только высокоуровневое описание и ссылку на директорию `/docs`.
