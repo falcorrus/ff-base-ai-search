@@ -50,12 +50,31 @@ def get_drive_service():
         
         # Build the service
         service = build('drive', 'v3', credentials=scoped_credentials, cache_discovery=False)
-        print("✅ Google Drive service initialized")
+        print("✅ Google Drive service initialized with default credentials")
         print(f"🕒 Current time (BRT): {get_current_time_brt()}")
         return service
         
     except Exception as e:
-        print(f"Error initializing Google Drive service: {e}")
+        print(f"Error initializing Google Drive service with default credentials: {e}")
+        # Try alternative initialization with service account key
+        try:
+            from google.oauth2 import service_account
+            service_account_path = "../backend/service-account-key.json"
+            if os.path.exists(service_account_path):
+                scopes = [
+                    "https://www.googleapis.com/auth/drive.readonly",
+                    "https://www.googleapis.com/auth/devstorage.read_write"
+                ]
+                credentials = service_account.Credentials.from_service_account_file(
+                    service_account_path, scopes=scopes)
+                service = build('drive', 'v3', credentials=credentials, cache_discovery=False)
+                print("✅ Google Drive service initialized with service account key")
+                print(f"🕒 Current time (BRT): {get_current_time_brt()}")
+                return service
+            else:
+                print(f"Service account key not found at {service_account_path}")
+        except Exception as alt_e:
+            print(f"Alternative initialization failed: {alt_e}")
         return None
 
 def get_gcs_client():
@@ -63,12 +82,27 @@ def get_gcs_client():
     try:
         # Initialize GCS client
         client = storage.Client()
-        print("✅ Google Cloud Storage client initialized")
+        print("✅ Google Cloud Storage client initialized with default credentials")
         print(f"🕒 Current time (BRT): {get_current_time_brt()}")
         return client
         
     except Exception as e:
-        print(f"Error initializing GCS client: {e}")
+        print(f"Error initializing GCS client with default credentials: {e}")
+        # Try alternative initialization with service account key
+        try:
+            from google.oauth2 import service_account
+            service_account_path = "../backend/service-account-key.json"
+            if os.path.exists(service_account_path):
+                credentials = service_account.Credentials.from_service_account_file(
+                    service_account_path)
+                client = storage.Client(credentials=credentials)
+                print("✅ Google Cloud Storage client initialized with service account key")
+                print(f"🕒 Current time (BRT): {get_current_time_brt()}")
+                return client
+            else:
+                print(f"Service account key not found at {service_account_path}")
+        except Exception as alt_e:
+            print(f"Alternative initialization failed: {alt_e}")
         return None
 
 def find_ff_base_folder(service):
