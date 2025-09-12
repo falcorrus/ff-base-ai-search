@@ -266,7 +266,15 @@ def find_most_relevant(query_embedding: List[float], top_k: int = 5) -> List[Dic
     similarities = cosine_similarity(query_embedding, embeddings)[0]
 
     top_indices = similarities.argsort()[-top_k:][::-1]
-    return [knowledge_base[i] for i in top_indices]
+    
+    # Return documents with their similarity scores
+    results = []
+    for i in top_indices:
+        doc = knowledge_base[i].copy()
+        doc["similarity"] = float(similarities[i])
+        results.append(doc)
+    
+    return results
 
 async def update_knowledge_base_from_local() -> Dict:
     """Update the knowledge base from local FF-BASE directory incrementally."""
@@ -696,7 +704,8 @@ def search(
             "relevant_documents": [
                 {
                     "file_path": doc["file_path"],
-                    "content": doc["content"][:500] + "..." if len(doc["content"]) > 500 else doc["content"]
+                    "content": doc["content"][:500] + "..." if len(doc["content"]) > 500 else doc["content"],
+                    "similarity": doc.get("similarity", 0)
                 } 
                 for doc in relevant_docs
             ],
