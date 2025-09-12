@@ -12,7 +12,7 @@ This project is a web application designed for intelligent search and comprehens
 **Key Technologies:**
 
 *   **Backend:** Python 3.9+, FastAPI, Google Gemini API, and Google Cloud Run for deployment.
-*   **Frontend:** Vanilla JavaScript, deployed on Firebase Hosting.
+*   **Frontend:** React.js with Tailwind CSS, deployed on Firebase Hosting.
 *   **Data Storage:** Embeddings are stored in a local JSON file (`knowledge_base/embeddings.json`), containing vector representations for all 276 Markdown notes.
 *   **Vector Search:** Semantic search using Google Gemini embeddings for finding relevant notes.
 *   **Query Logging:** All search queries are logged to a JSON file (`knowledge_base/search_log.json`) with timestamps.
@@ -116,20 +116,20 @@ Endpoints:
 *   `GET /search?query={query}` - Search for relevant notes and generate answers
 *   `GET /notes-count` - Get the total number of notes in the knowledge base
 
-### Frontend (Vanilla JS)
+### Frontend (React.js)
 
-The frontend is a static web application. It would be served by a web server or deployed to a static hosting service.
+The frontend is a React.js application with Tailwind CSS. It can be served locally using the development server.
 
 ```bash
-# To serve locally (example using Python's http.server)
-cd frontend
-python -m http.server 3000
+# To serve locally
+cd frontend-react
+npm start
 ```
 
 ### Deployment
 
 *   **Backend:** Deployed on Google Cloud Run.
-*   **Frontend:** Deployed on Firebase Hosting.
+*   **Frontend:** React.js with Tailwind CSS, deployed on Firebase Hosting.
 
 ## Development Conventions
 

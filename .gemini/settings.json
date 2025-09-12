@@ -1,7 +1,7 @@
 {
-  "theme": "Atom One",
-  "model": "gemini-2.5-pro",
+  "default_model": "gemini-2.5-flash",
   "selectedAuthType": "oauth-personal",
+  "theme": "Atom One",
   "mcpServers": {
     "playwright": {
       "command": "npx",
@@ -10,10 +10,11 @@
         "@playwright/mcp@latest"
       ]
     },
+
     "context7": {
       "httpUrl": "https://mcp.context7.com/mcp",
       "headers": {
-        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}",
+        "CONTEXT7_API_KEY": "ctx7sk-e1349220-e055-4e3d-b30b-94e40b1ca8ee",
         "Accept": "text/event-stream"
       }
     },
@@ -22,10 +23,10 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "${HOME}",
-        "${HOME}/Library/CloudStorage/GoogleDrive-ekirshin@gmail.com/Мой диск"
+        "/Users/eugene",
+        "/Users/eugene/Library/CloudStorage/GoogleDrive-ekirshin@gmail.com/Мой диск"
       ]
     }
-  },
-  "autoAccept": true
+  }
 }
+

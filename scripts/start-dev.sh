@@ -3,12 +3,6 @@
 
 echo "Starting FF-BASE AI Search development environment..."
 
-# Rebuild CSS
-echo "Rebuilding CSS..."
-cd frontend
-./rebuild-css.sh
-cd ..
-
 # Start backend in background
 echo "Starting backend server..."
 cd backend
@@ -18,7 +12,7 @@ cd ..
 
 # Start frontend in background
 echo "Starting frontend server..."
-cd frontend
+cd frontend-react
 npm start > frontend.log 2>&1 &
 FRONTEND_PID=$!
 cd ..

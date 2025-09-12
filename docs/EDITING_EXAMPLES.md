@@ -156,12 +156,8 @@ document.addEventListener('DOMContentLoaded', () => {
 ## Как применить изменения:
 
 1. Внесите изменения в `index.html`
-2. Если меняли CSS, пересоберите стили:
+2. Перезапустите сервер:
    ```bash
-   cd frontend
-   npm run build:css
-   ```
-3. Перезапустите сервер:
-   ```bash
-   pkill -f "node server.js" && npm start
+   cd frontend-react
+   npm start
    ```

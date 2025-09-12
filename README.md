@@ -52,7 +52,8 @@ ff-base-ai-search/
 │       └── ...
 ├── FF-BASE/                  # Локальная копия заметок (если используется)
 ├── knowledge_base/           # Локальная база знаний (эмбеддинги, логи)
-├── frontend/                 # Frontend приложение (если используется)
+├── frontend/                 # Old frontend приложение (устарело)
+├── frontend-react/           # Frontend приложение (React.js)
 └── tests/                    # Тесты
 ```
 
@@ -109,8 +110,8 @@ cd cloud-function/monitor
 
 ### 5. Настройка frontend (shadcn/ui)
 ```bash
-# Переход в директорию frontend
-cd frontend
+# Переход в директорию frontend-react
+cd frontend-react
 
 # Установка зависимостей shadcn/ui
 npm install class-variance-authority clsx tailwind-merge lucide-react tw-animate-css
@@ -119,8 +120,7 @@ npm install class-variance-authority clsx tailwind-merge lucide-react tw-animate
 npx shadcn@latest add button
 ```
 
-Более подробную информацию о настройке и использовании shadcn/ui можно найти в файле `frontend/SHADCN_UI.md`.
-Подробный отчет о проделанной работе находится в файле `frontend/SHADCN_UI_SETUP_SUMMARY.md`.
+Более подробную информацию о настройке и использовании shadcn/ui можно найти в документации shadcn/ui.
 
 ## Использование
 
@@ -164,8 +164,8 @@ cd backend
 
 ### Запуск frontend сервера
 ```bash
-# Переход в директорию frontend
-cd frontend
+# Переход в директорию frontend-react
+cd frontend-react
 
 # Запуск сервера
 npm start

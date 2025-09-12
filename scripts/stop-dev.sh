@@ -9,6 +9,6 @@ pkill -f "uvicorn main:app" || echo "No backend processes found"
 
 # Kill frontend processes
 echo "Stopping frontend server..."
-pkill -f "node server.js" || echo "No frontend processes found"
+pkill -f "react-scripts start" || echo "No frontend processes found"
 
 echo "Development environment stopped."

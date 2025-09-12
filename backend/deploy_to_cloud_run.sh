@@ -16,16 +16,7 @@ if [ -z "$REGION" ]; then
   REGION="us-central1"
 fi
 
-# Загрузка переменных окружения из .env файла (только непустые строки без комментариев)
-if [ -f .env ]; then
-  export $(grep -v '^#' .env | grep -v '^$' | xargs)
-fi
 
-# Проверка наличия GOOGLE_API_KEY
-if [ -z "$GOOGLE_API_KEY" ]; then
-  echo "GOOGLE_API_KEY не установлен. Пожалуйста, установите переменную окружения GOOGLE_API_KEY в файле .env."
-  exit 1
-fi
 
 # Деплой в Google Cloud Run
 echo "Деплой в Google Cloud Run..."

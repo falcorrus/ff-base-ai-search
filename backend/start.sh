@@ -20,7 +20,7 @@ source venv/bin/activate
 
 # Check if required packages are installed
 echo "Checking dependencies..."
-if ! python -c "import fastapi uvicorn google.generativeai" &> /dev/null; then
+if ! python -c "import fastapi, uvicorn, google.generativeai" &> /dev/null; then
     echo "Error: Required dependencies not found."
     echo "Please install them with: pip install -r requirements.txt"
     exit 1

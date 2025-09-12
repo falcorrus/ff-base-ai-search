@@ -34,9 +34,9 @@
    - Введите имя проекта (например, "ff-base-ai-search")
    - Следуйте инструкциям для создания проекта
 
-3. В директории frontend выполните инициализацию Firebase:
+3. В директории frontend-react выполните инициализацию Firebase:
    ```
-   cd frontend
+   cd frontend-react
    firebase use --add
    ```
    

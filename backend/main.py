@@ -704,7 +704,7 @@ def search(
             "relevant_documents": [
                 {
                     "file_path": doc["file_path"],
-                    "content": doc["content"][:500] + "..." if len(doc["content"]) > 500 else doc["content"],
+                    "content": doc["content"],
                     "similarity": doc.get("similarity", 0)
                 } 
                 for doc in relevant_docs
