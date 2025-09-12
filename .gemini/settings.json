@@ -1,0 +1,31 @@
+{
+  "theme": "Atom One",
+  "model": "gemini-2.5-pro",
+  "selectedAuthType": "oauth-personal",
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@playwright/mcp@latest"
+      ]
+    },
+    "context7": {
+      "httpUrl": "https://mcp.context7.com/mcp",
+      "headers": {
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}",
+        "Accept": "text/event-stream"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "${HOME}",
+        "${HOME}/Library/CloudStorage/GoogleDrive-ekirshin@gmail.com/Мой диск"
+      ]
+    }
+  },
+  "autoAccept": true
+}

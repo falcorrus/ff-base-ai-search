@@ -67,6 +67,48 @@ chmod +x start.sh
 ./start.sh
 ```
 
+**Рабочий вариант запуска (если стандартные методы не работают):**
+
+Если при запуске сервера возникают проблемы с подключением, попробуйте запустить сервер напрямую с помощью Python:
+
+```bash
+# Navigate to the backend directory
+cd backend
+
+# Activate the virtual environment
+source venv/bin/activate
+
+# Run the backend server directly with Python
+python -m uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+Или используйте специальный скрипт для прямого запуска:
+
+```bash
+# Navigate to the backend directory
+cd backend
+
+# Run the direct start script
+./start_direct.sh
+```
+
+После запуска сервер будет доступен по адресу: http://localhost:8000
+
+Вы можете проверить его работоспособность с помощью следующей команды:
+
+```bash
+curl http://localhost:8000/
+```
+
+Или в Python:
+
+```python
+import requests
+response = requests.get('http://localhost:8000/')
+print(response.status_code)
+print(response.json())
+```
+
 Endpoints:
 
 *   `GET /` - Health check endpoint

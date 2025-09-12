@@ -18,6 +18,7 @@ from googleapiclient.discovery import build
 from google.auth import default
 from googleapiclient.http import MediaIoBaseDownload
 from googleapiclient.errors import HttpError
+import concurrent.futures
 
 # Import time utilities
 from time_utils import utc_to_brt, get_current_time_brt, get_current_time_utc
@@ -34,7 +35,6 @@ MAX_EXECUTION_TIME = 480  # 8 minutes (less than 9-minute Cloud Function limit)
 
 # Time zones
 UTC = pytz.UTC
-BRT = pytz.timezone('America/Sao_Paulo')  # Brasília Time (UTC-3)
 
 def get_drive_service():
     """Initialize and return Google Drive service using default credentials."""
@@ -51,7 +51,7 @@ def get_drive_service():
         # Build the service
         service = build('drive', 'v3', credentials=scoped_credentials, cache_discovery=False)
         print("✅ Google Drive service initialized with default credentials")
-        print(f"🕒 Current time (BRT): {get_current_time_brt()}")
+        print(f"🕒 Current time (UTC): {get_current_time_brt()}")
         return service
         
     except Exception as e:
@@ -69,7 +69,7 @@ def get_drive_service():
                     service_account_path, scopes=scopes)
                 service = build('drive', 'v3', credentials=credentials, cache_discovery=False)
                 print("✅ Google Drive service initialized with service account key")
-                print(f"🕒 Current time (BRT): {get_current_time_brt()}")
+                print(f"🕒 Current time (UTC): {get_current_time_brt()}")
                 return service
             else:
                 print(f"Service account key not found at {service_account_path}")
@@ -83,7 +83,7 @@ def get_gcs_client():
         # Initialize GCS client
         client = storage.Client()
         print("✅ Google Cloud Storage client initialized with default credentials")
-        print(f"🕒 Current time (BRT): {get_current_time_brt()}")
+        print(f"🕒 Current time (UTC): {get_current_time_brt()}")
         return client
         
     except Exception as e:
@@ -97,7 +97,7 @@ def get_gcs_client():
                     service_account_path)
                 client = storage.Client(credentials=credentials)
                 print("✅ Google Cloud Storage client initialized with service account key")
-                print(f"🕒 Current time (BRT): {get_current_time_brt()}")
+                print(f"🕒 Current time (UTC): {get_current_time_brt()}")
                 return client
             else:
                 print(f"Service account key not found at {service_account_path}")
@@ -122,7 +122,7 @@ def find_ff_base_folder(service):
             
         folder = items[0]
         print(f"Found {FF_BASE_FOLDER_NAME} folder: {folder['name']} (ID: {folder['id']})")
-        print(f"🕒 Search completed at (BRT): {get_current_time_brt()}")
+        print(f"🕒 Search completed at (UTC): {get_current_time_brt()}")
         return folder['id']
         
     except Exception as e:
@@ -140,21 +140,21 @@ def get_sync_state(gcs_client, bucket_name):
             state = json.loads(content)
             last_sync = state.get('last_sync', '1970-01-01T00:00:00Z')
             print(f"✅ Last sync timestamp (UTC): {last_sync}")
-            print(f"🕒 Last sync timestamp (BRT): {utc_to_brt(last_sync)}")
+            print(f"🕒 Last sync timestamp (UTC): {utc_to_brt(last_sync)}")
             return last_sync
         else:
             # If no sync state, use a long time ago
-            long_ago = (datetime.now(UTC) - timedelta(days=365)).isoformat() + 'Z'
+            long_ago = (datetime.now(UTC) - timedelta(days=365)).isoformat()
             print(f"⚠️  No sync state found, using: {long_ago}")
-            print(f"🕒 No sync state found, using (BRT): {utc_to_brt(long_ago)}")
+            print(f"🕒 No sync state found, using (UTC): {utc_to_brt(long_ago)}")
             return long_ago
             
     except Exception as e:
         print(f"Error getting sync state: {e}")
         # If error, use a long time ago
-        long_ago = (datetime.now(UTC) - timedelta(days=365)).isoformat() + 'Z'
+        long_ago = (datetime.now(UTC) - timedelta(days=365)).isoformat()
         print(f"⚠️  Error getting sync state, using: {long_ago}")
-        print(f"🕒 Error getting sync state, using (BRT): {utc_to_brt(long_ago)}")
+        print(f"🕒 Error getting sync state, using (UTC): {utc_to_brt(long_ago)}")
         return long_ago
 
 def save_sync_state(gcs_client, bucket_name, last_sync):
@@ -165,12 +165,12 @@ def save_sync_state(gcs_client, bucket_name, last_sync):
         
         state = {
             'last_sync': last_sync,
-            'updated_at': datetime.now(UTC).isoformat() + 'Z'
+            'updated_at': datetime.now(UTC).isoformat()
         }
         
         blob.upload_from_string(json.dumps(state, indent=2))
         print(f"✅ Sync state saved (UTC): {last_sync}")
-        print(f"🕒 Sync state saved (BRT): {utc_to_brt(last_sync)}")
+        print(f"🕒 Sync state saved (UTC): {utc_to_brt(last_sync)}")
         
     except Exception as e:
         print(f"Error saving sync state: {e}")
@@ -179,7 +179,7 @@ def list_drive_files_incremental(service, folder_id, last_sync_time):
     """List files changed since last sync time."""
     try:
         print(f"🔍 Looking for files changed since (UTC): {last_sync_time}")
-        print(f"🕒 Looking for files changed since (BRT): {utc_to_brt(last_sync_time)}")
+        print(f"🕒 Looking for files changed since (UTC): {utc_to_brt(last_sync_time)}")
         
         all_files = []
         
@@ -217,7 +217,12 @@ def list_drive_files_incremental(service, folder_id, last_sync_time):
                 list_files_since_recursive(folder['id'], full_path)
             
             # List .md files changed since last sync
-            file_query = f"'{parent_id}' in parents and (mimeType='text/markdown' or mimeType='text/x-markdown' or name contains '.md') and trashed=false and modifiedTime > '{last_sync_time}'"
+            # Fix timestamp format for Google Drive API - remove 'Z' if present when there's already a timezone offset
+            clean_last_sync_time = last_sync_time
+            if '+' in last_sync_time and last_sync_time.endswith('Z'):
+                clean_last_sync_time = last_sync_time[:-1]  # Remove the 'Z' at the end
+            
+            file_query = f"'{parent_id}' in parents and (mimeType='text/markdown' or mimeType='text/x-markdown' or name contains '.md') and trashed=false and modifiedTime > '{clean_last_sync_time}'"
             
             for attempt in range(RETRY_ATTEMPTS):
                 try:
@@ -249,12 +254,11 @@ def list_drive_files_incremental(service, folder_id, last_sync_time):
                 full_path = f"{path_prefix}/{file['name']}" if path_prefix else file['name']
                 file['full_path'] = full_path
                 
-                # Display modification time in both UTC and BRT
+                # Display modification time in UTC
                 mod_time = file.get('modifiedTime', '')
                 if mod_time:
                     print(f"📄 Found changed file: {full_path}")
                     print(f"   Modified (UTC): {mod_time}")
-                    print(f"   Modified (BRT): {utc_to_brt(mod_time)}")
                 
                 all_files.append(file)
         
@@ -308,30 +312,19 @@ def download_drive_file_with_retry(service, file_id):
 
 def sync_single_file(args):
     """Sync a single file - used for parallel processing."""
-    service, gcs_client, bucket_name, file = args
+    # Create a new service instance for this thread to avoid thread-safety issues
+    service = get_drive_service()
+    if not service:
+        return "failed", "Failed to initialize Drive service"
+        
+    _, gcs_client, bucket_name, file = args
     
     try:
         file_path = file['full_path']
         print(f"Processing: {file_path}")
         
-        # Get file's MD5 checksum from Google Drive
-        drive_md5 = file.get('md5Checksum')
+        # Get file's modification time from Google Drive
         mod_time = file.get('modifiedTime', '')
-        
-        # Check if file already exists in GCS
-        bucket = gcs_client.bucket(bucket_name)
-        blob = bucket.blob(file_path)
-        if blob.exists():
-            # Get the MD5 hash of the existing file
-            existing_blob = bucket.get_blob(file_path)
-            if existing_blob and existing_blob.md5_hash:
-                # Convert base64 hash to hex
-                existing_md5 = base64.b64decode(existing_blob.md5_hash).hex()
-                
-                # Compare hashes
-                if existing_md5.lower() == drive_md5.lower() if drive_md5 else False:
-                    print(f"⏭️  Skipped (unchanged): {file_path}")
-                    return "skipped", file_path
         
         # Download file content with retry logic
         content = download_drive_file_with_retry(service, file['id'])
@@ -393,7 +386,7 @@ def sync_drive_to_gcs_optimized():
             end_time = datetime.now(UTC)
             duration = end_time - start_time
             print(f"✅ Sync completed: 0 files synced in {duration}")
-            print(f"🕒 Sync completed at (BRT): {get_current_time_brt()}")
+            print(f"🕒 Sync completed at (UTC): {get_current_time_brt()}")
             return True
         
         print(f"Found {len(recent_files)} recently changed files")
@@ -405,25 +398,25 @@ def sync_drive_to_gcs_optimized():
         batch_number = 0
         
         # Track execution time to avoid exceeding Cloud Function limits
-        execution_start = datetime.now()
+        execution_start = datetime.now(UTC)
         
         for i in range(0, len(recent_files), BATCH_SIZE):
             batch = recent_files[i:i + BATCH_SIZE]
             batch_number += 1
-            batch_start = datetime.now()
+            batch_start = datetime.now(UTC)
             
             # Check if we're approaching the timeout limit
-            execution_duration = datetime.now() - execution_start
+            execution_duration = datetime.now(UTC) - execution_start
             if execution_duration.total_seconds() > MAX_EXECUTION_TIME:
                 print(f"⚠️  Approaching execution time limit, stopping sync")
                 print(f"⏱️  Execution time: {execution_duration}")
                 break
             
             print(f"🔄 Processing batch {batch_number}/{(len(recent_files) + BATCH_SIZE - 1) // BATCH_SIZE}: {len(batch)} files")
-            print(f"🕒 Batch {batch_number} started at (BRT): {get_current_time_brt()}")
+            print(f"🕒 Batch {batch_number} started at (UTC): {get_current_time_brt()}")
             
             # Prepare arguments for parallel processing
-            args_list = [(drive_service, gcs_client, BUCKET_NAME, file) for file in batch]
+            args_list = [(None, gcs_client, BUCKET_NAME, file) for file in batch]
             
             # Process files in parallel
             with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
@@ -438,10 +431,10 @@ def sync_drive_to_gcs_optimized():
                     else:  # failed
                         failed_count += 1
             
-            batch_end = datetime.now()
+            batch_end = datetime.now(UTC)
             batch_duration = batch_end - batch_start
             print(f"✅ Batch {batch_number} completed in {batch_duration}: {len([r for r in results if r[0] == 'synced'])} synced, {len([r for r in results if r[0] == 'skipped'])} skipped, {len([r for r in results if r[0] == 'failed'])} failed")
-            print(f"🕒 Batch {batch_number} completed at (BRT): {get_current_time_brt()}")
+            print(f"🕒 Batch {batch_number} completed at (UTC): {get_current_time_brt()}")
             
             # Add small delay between batches to avoid rate limits
             if i + BATCH_SIZE < len(recent_files):
@@ -449,13 +442,13 @@ def sync_drive_to_gcs_optimized():
                 time.sleep(2)
         
         # Update sync state to current time
-        current_time = datetime.now(UTC).isoformat() + 'Z'
+        current_time = datetime.now(UTC).isoformat()
         save_sync_state(gcs_client, BUCKET_NAME, current_time)
         
         end_time = datetime.now(UTC)
         duration = end_time - start_time
         print(f"✅ Optimized sync completed: {synced_count} files synced, {skipped_count} files unchanged, {failed_count} files failed in {duration}")
-        print(f"🕒 Sync completed at (BRT): {get_current_time_brt()}")
+        print(f"🕒 Sync completed at (UTC): {get_current_time_brt()}")
         
         return True
         
@@ -469,7 +462,7 @@ def sync_drive_to_gcs_http(request):
     """HTTP Cloud Function entry point - optimized version."""
     try:
         print("🚀 HTTP Cloud Function triggered - optimized sync")
-        print(f"🕒 Function triggered at (BRT): {get_current_time_brt()}")
+        print(f"🕒 Function triggered at (UTC): {get_current_time_brt()}")
         start_time = datetime.now(UTC)
         
         success = sync_drive_to_gcs_optimized()
@@ -479,25 +472,25 @@ def sync_drive_to_gcs_http(request):
         
         if success:
             print(f"✅ Optimized sync completed in {duration}")
-            print(f"🕒 Function completed at (BRT): {get_current_time_brt()}")
+            print(f"🕒 Function completed at (UTC): {get_current_time_brt()}")
             return (f"Optimized sync completed in {duration}", 200)
         else:
             print(f"❌ Optimized sync failed after {duration}")
-            print(f"🕒 Function failed at (BRT): {get_current_time_brt()}")
+            print(f"🕒 Function failed at (UTC): {get_current_time_brt()}")
             return (f"Optimized sync failed after {duration}", 500)
         
     except Exception as e:
         print(f"Error in HTTP function: {e}")
         import traceback
         traceback.print_exc()
-        print(f"🕒 Function error at (BRT): {get_current_time_brt()}")
+        print(f"🕒 Function error at (UTC): {get_current_time_brt()}")
         return (f"Error: {e}", 500)
 
 def sync_drive_to_gcs(event, context):
     """Background Cloud Function entry point - optimized version."""
     try:
         print("🚀 Background Cloud Function triggered - optimized sync")
-        print(f"🕒 Function triggered at (BRT): {get_current_time_brt()}")
+        print(f"🕒 Function triggered at (UTC): {get_current_time_brt()}")
         start_time = datetime.now(UTC)
         
         success = sync_drive_to_gcs_optimized()
@@ -507,13 +500,13 @@ def sync_drive_to_gcs(event, context):
         
         if success:
             print(f"✅ Background optimized sync completed in {duration}")
-            print(f"🕒 Function completed at (BRT): {get_current_time_brt()}")
+            print(f"🕒 Function completed at (UTC): {get_current_time_brt()}")
         else:
             print(f"❌ Background optimized sync failed after {duration}")
-            print(f"🕒 Function failed at (BRT): {get_current_time_brt()}")
+            print(f"🕒 Function failed at (UTC): {get_current_time_brt()}")
         
     except Exception as e:
         print(f"Error in background function: {e}")
         import traceback
         traceback.print_exc()
-        print(f"🕒 Function error at (BRT): {get_current_time_brt()}")
+        print(f"🕒 Function error at (UTC): {get_current_time_brt()}")

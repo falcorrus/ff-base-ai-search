@@ -7,6 +7,7 @@ Uses highly optimized incremental sync with timeout handling.
 
 # Import the optimized sync function
 from optimized_sync import sync_drive_to_gcs_optimized, sync_drive_to_gcs_http, sync_drive_to_gcs
+from time_utils import get_current_time_brt
 
 # Export functions for Cloud Functions
 sync_drive_to_gcs_http = sync_drive_to_gcs_http

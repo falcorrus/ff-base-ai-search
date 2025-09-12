@@ -17,8 +17,6 @@ sync_logs.md
 
 # Environment variables
 .env
-.env2
-.env 2
 .env.local
 .env.development.local
 .env.test.local

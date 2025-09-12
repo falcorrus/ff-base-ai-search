@@ -1,8 +1,8 @@
 #!/bin/bash
-# Script to start the FastAPI backend
+# Alternative script to start the FastAPI backend directly with Python
 
-echo "Starting FF-BASE AI Search System..."
-echo "-----------------------------------"
+echo "Starting FF-BASE AI Search System (Direct Method)..."
+echo "---------------------------------------------------"
 
 # Navigate to the script directory
 cd "$(dirname "$0")"
@@ -34,15 +34,10 @@ if [ ! -f ".env" ]; then
     echo "Please create it from .env.example and configure your API keys."
 fi
 
-echo ""
-echo "Note: If you experience connection issues, try using the direct start script:"
-echo "  ./start_direct.sh"
-echo ""
-
-echo "Starting server..."
+echo "Starting server directly with Python..."
 echo "Server will be available at http://localhost:8000"
 echo "Press Ctrl+C to stop the server"
 echo ""
 
-# Start the server
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+# Start the server directly with Python
+python -m uvicorn main:app --host 0.0.0.0 --port 8000

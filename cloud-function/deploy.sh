@@ -23,7 +23,6 @@ gcloud functions deploy sync-drive-to-gcs \
   --memory=512MB \
   --timeout=540s \
   --service-account=$SERVICE_ACCOUNT \
-  --set-env-vars=GOOGLE_APPLICATION_CREDENTIALS="/etc/secrets/service-account-key.json" \
   --source=. \
   --update-labels=environment=production,version=optimized
 
